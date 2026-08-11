@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lyrics - ShayariVerse</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tiro+Bangla&family=Hind:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            dark: '#070913',
+                            card: '#111827',
+                            border: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        bangla: ['Tiro Bangla', 'serif'],
+                        hindi: ['Hind', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase Compat SDKs (Auth & Realtime Database ONLY) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #070913;
+            color: #f3f4f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 90px; /* Clearance for mobile bottom navbar */
+        }
+
+        .glass-header {
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-nav {
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        }
+
+        .btn-gradient:active {
+            transform: scale(0.97);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .line-clamp-4 {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col selection:bg-purple-500 selection:text-white">
+
+    <!-- TOP STICKY HEADER -->
+    <header class="glass-header fixed top-0 left-0 right-0 z-40 h-16 transition-all duration-200">
+        <div class="max-w-2xl mx-auto h-full px-4 flex items-center justify-between">
+            
+            <!-- Back Button -->
+            <a href="home.html" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-800/60 active:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-arrow-left text-base"></i>
+            </a>
+
+            <!-- Header Title -->
+            <div class="flex items-center gap-1.5">
+                <i class="fa-solid fa-music text-purple-400 text-sm"></i>
+                <h1 class="text-base font-extrabold text-white tracking-tight">Lyrics</h1>
+            </div>
+
+            <!-- Search Icon -->
+            <a href="search.html" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-800/60 active:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+            </a>
+
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="pt-20 px-3 sm:px-4 max-w-2xl mx-auto w-full flex-grow">
+
+        <!-- PAGE INTRO BANNER -->
+        <section class="glass-card rounded-2xl p-4 sm:p-5 mb-5 border border-purple-500/20 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
+                        Lyrics <span class="text-gradient">🎵</span>
+                    </h2>
+                    <p class="text-xs text-purple-300 font-medium mt-1">প্রিয় গানের কথা খুঁজে নিন।</p>
+                </div>
+                
+                <!-- Create Lyrics CTA -->
+                <a id="create-lyrics-btn" href="register.html" class="btn-gradient px-3.5 py-2 rounded-xl text-white font-bold text-xs shadow-md shadow-purple-500/20 flex items-center gap-1.5 shrink-0 active:scale-95 transition-all">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Lyrics লিখুন</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- LANGUAGE FILTER CHIPS -->
+        <section class="mb-4">
+            <h3 class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">ভাষা নির্বাচন করুন</h3>
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs font-medium py-1">
+                <button onclick="setLanguageFilter('all')" id="lang-chip-all" class="lang-chip px-3.5 py-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 whitespace-nowrap active:scale-95 transition-all">
+                    সব ভাষা
+                </button>
+                <button onclick="setLanguageFilter('Bangla')" id="lang-chip-Bangla" class="lang-chip px-3.5 py-2 rounded-xl bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap active:scale-95 transition-all">
+                    বাংলা
+                </button>
+                <button onclick="setLanguageFilter('Hindi')" id="lang-chip-Hindi" class="lang-chip px-3.5 py-2 rounded-xl bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap active:scale-95 transition-all">
+                    हिंदी
+                </button>
+                <button onclick="setLanguageFilter('Banglish')" id="lang-chip-Banglish" class="lang-chip px-3.5 py-2 rounded-xl bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap active:scale-95 transition-all">
+                    Banglish
+                </button>
+                <button onclick="setLanguageFilter('Hindilish')" id="lang-chip-Hindilish" class="lang-chip px-3.5 py-2 rounded-xl bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap active:scale-95 transition-all">
+                    Hindilish
+                </button>
+            </div>
+        </section>
+
+        <!-- CATEGORY FILTER CHIPS -->
+        <section class="mb-6">
+            <h3 class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">ক্যাটাগরি</h3>
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-3 px-3 text-xs font-semibold">
+                <button onclick="setCategoryFilter('all')" id="cat-chip-all" class="cat-chip px-3.5 py-2 rounded-xl bg-purple-500 text-white whitespace-nowrap active:scale-95 transition-all shadow">
+                    সব
+                </button>
+                <button onclick="setCategoryFilter('Love')" id="cat-chip-Love" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    ❤️ Love
+                </button>
+                <button onclick="setCategoryFilter('Sad')" id="cat-chip-Sad" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    💔 Sad
+                </button>
+                <button onclick="setCategoryFilter('Breakup')" id="cat-chip-Breakup" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    🥀 Breakup
+                </button>
+                <button onclick="setCategoryFilter('Attitude')" id="cat-chip-Attitude" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    😎 Attitude
+                </button>
+                <button onclick="setCategoryFilter('Friendship')" id="cat-chip-Friendship" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    🫂 Friendship
+                </button>
+                <button onclick="setCategoryFilter('Romantic')" id="cat-chip-Romantic" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    🌙 Romantic
+                </button>
+                <button onclick="setCategoryFilter('Motivation')" id="cat-chip-Motivation" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    🔥 Motivation
+                </button>
+                <button onclick="setCategoryFilter('Funny')" id="cat-chip-Funny" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    😂 Funny
+                </button>
+                <button onclick="setCategoryFilter('Alone')" id="cat-chip-Alone" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    🖤 Alone
+                </button>
+                <button onclick="setCategoryFilter('Islamic')" id="cat-chip-Islamic" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    🤲 Islamic
+                </button>
+                <button onclick="setCategoryFilter('Emotional')" id="cat-chip-Emotional" class="cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all">
+                    💭 Emotional
+                </button>
+            </div>
+        </section>
+
+        <!-- SECTION 1: POPULAR LYRICS (TOP 10 MAXIMUM) -->
+        <section class="mb-8 space-y-3">
+            <div class="flex items-center justify-between border-b border-gray-800/80 pb-2.5">
+                <h2 class="text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse"></span>
+                    🔥 জনপ্রিয় Lyrics (Top 10)
+                </h2>
+                <span id="popular-count-badge" class="text-[10px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20 font-bold">
+                    0 Items
+                </span>
+            </div>
+
+            <!-- POPULAR FEED CONTAINER -->
+            <div id="popular-feed-container" class="space-y-4">
+                
+                <!-- Skeleton Loader -->
+                <div class="glass-card rounded-2xl p-5 space-y-4 animate-pulse">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-800"></div>
+                        <div class="space-y-1.5 flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-1/3"></div>
+                            <div class="h-2.5 bg-gray-800/60 rounded w-1/4"></div>
+                        </div>
+                    </div>
+                    <div class="h-10 bg-gray-800 rounded-xl"></div>
+                    <div class="space-y-2 py-1">
+                        <div class="h-3 bg-gray-800 rounded w-full"></div>
+                        <div class="h-3 bg-gray-800 rounded w-3/4"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 2: LATEST LYRICS FEED -->
+        <section class="space-y-3">
+            <div class="flex items-center justify-between border-b border-gray-800/80 pb-2.5">
+                <h2 class="text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                    🆕 নতুন Lyrics
+                </h2>
+                <span id="latest-count-badge" class="text-[10px] text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full border border-pink-500/20 font-bold">
+                    0 Items
+                </span>
+            </div>
+
+            <!-- LATEST FEED CONTAINER -->
+            <div id="latest-feed-container" class="space-y-4">
+                
+                <!-- Skeleton Loader -->
+                <div class="glass-card rounded-2xl p-5 space-y-4 animate-pulse">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-800"></div>
+                        <div class="space-y-1.5 flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-1/3"></div>
+                            <div class="h-2.5 bg-gray-800/60 rounded w-1/4"></div>
+                        </div>
+                    </div>
+                    <div class="h-10 bg-gray-800 rounded-xl"></div>
+                    <div class="space-y-2 py-1">
+                        <div class="h-3 bg-gray-800 rounded w-full"></div>
+                        <div class="h-3 bg-gray-800 rounded w-3/4"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- LOAD MORE BUTTON -->
+            <div id="load-more-container" class="hidden text-center mt-6 pt-2">
+                <button onclick="handleLoadMoreLatest()" class="px-6 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-xs font-bold text-gray-200 border border-gray-800 active:scale-95 transition-all">
+                    <i class="fa-solid fa-arrows-rotate mr-1.5 text-purple-400"></i> আরও Lyrics দেখুন
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="glass-nav fixed bottom-0 left-0 right-0 z-50 h-16 px-4 max-w-md mx-auto md:max-w-lg rounded-t-2xl sm:rounded-t-none">
+        <div class="grid grid-cols-5 h-full items-center text-center">
+            
+            <!-- 1. Home -->
+            <a href="home.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[9px] tracking-tight">Home</span>
+            </a>
+
+            <!-- 2. Lyrics (Active) -->
+            <a href="lyrics.html" class="flex flex-col items-center justify-center gap-1 text-purple-400 font-bold">
+                <i class="fa-solid fa-music text-lg"></i>
+                <span class="text-[9px] tracking-tight">Lyrics</span>
+            </a>
+
+            <!-- 3. Create Button -->
+            <a id="bottom-create-link" href="register.html" class="flex flex-col items-center justify-center">
+                <div class="w-11 h-11 rounded-full btn-gradient flex items-center justify-center text-white shadow-lg shadow-purple-500/30 -mt-5 border-2 border-gray-950 active:scale-95">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                </div>
+                <span class="text-[9px] text-gray-400 tracking-tight mt-0.5">Create</span>
+            </a>
+
+            <!-- 4. Favorites -->
+            <a href="favorites.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-bookmark text-lg"></i>
+                <span class="text-[9px] tracking-tight">Favorites</span>
+            </a>
+
+            <!-- 5. Profile -->
+            <a id="bottom-profile-link" href="login.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-user text-lg"></i>
+                <span class="text-[9px] tracking-tight">Profile</span>
+            </a>
+
+        </div>
+    </nav>
+
+    <!-- JAVASCRIPT & FIREBASE REALTIME DB LOGIC -->
+    <script>
+        // =============================================================
+        // 1. FIREBASE CONFIGURATION & INITIALIZATION
+        // =============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFPd0umYUjpFBH08GNhpvjPA00kTh6Y5c",
+            authDomain: "unlimited-73d64.firebaseapp.com",
+            databaseURL: "https://unlimited-73d64-default-rtdb.firebaseio.com",
+            projectId: "unlimited-73d64",
+            storageBucket: "unlimited-73d64.firebasestorage.app",
+            messagingSenderId: "1089467648940",
+            appId: "1:1089467648940:web:2886be4ec3148bee08c809"
+        };
+
+        let app, auth, db;
+        let currentUser = null;
+
+        let allPublishedLyrics = []; // Stores valid published lyrics
+        let filteredLyrics = []; // After applying category and language filters
+        
+        let selectedLanguage = 'all';
+        let selectedCategory = 'all';
+        let latestVisibleLimit = 10;
+
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.app();
+                }
+                auth = firebase.auth();
+                db = firebase.database();
+            }
+        } catch (e) {
+            console.warn("Firebase Init Error:", e.message);
+        }
+
+        // =============================================================
+        // 2. AUTH STATE LISTENER & UI UPDATES
+        // =============================================================
+        if (auth) {
+            auth.onAuthStateChanged((user) => {
+                currentUser = user;
+                const createBtn = document.getElementById('create-lyrics-btn');
+                const bottomCreate = document.getElementById('bottom-create-link');
+                const bottomProfile = document.getElementById('bottom-profile-link');
+
+                if (user) {
+                    if (createBtn) createBtn.href = "create.html";
+                    if (bottomCreate) bottomCreate.href = "create.html";
+                    if (bottomProfile) bottomProfile.href = "profile.html";
+                } else {
+                    if (createBtn) createBtn.href = "register.html";
+                    if (bottomCreate) bottomCreate.href = "register.html";
+                    if (bottomProfile) bottomProfile.href = "login.html";
+                }
+            });
+        }
+
+        // =============================================================
+        // 3. INITIALIZATION & URL QUERY PARSER
+        // =============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryCat = urlParams.get('category') || urlParams.get('cat');
+
+            if (queryCat) {
+                selectedCategory = queryCat;
+                updateCategoryChipsUI();
+            }
+
+            loadLyricsFromFirebase();
+        });
+
+        // =============================================================
+        // 4. FETCH REALTIME DB DATA (TYPE = LYRICS & STATUS = PUBLISHED)
+        // =============================================================
+        function loadLyricsFromFirebase() {
+            if (!db) {
+                renderErrorState();
+                return;
+            }
+
+            const contentRef = db.ref('content');
+
+            contentRef.once('value').then((snapshot) => {
+                allPublishedLyrics = [];
+
+                if (snapshot.exists()) {
+                    const rawData = snapshot.val();
+
+                    Object.keys(rawData).forEach((key) => {
+                        const item = rawData[key];
+
+                        // STRICT FILTER: type = "lyrics", status = "published", REQUIRED songName & artistName
+                        if (
+                            item &&
+                            item.type === 'lyrics' &&
+                            item.status === 'published' &&
+                            item.songName && item.songName.trim() !== '' &&
+                            item.artistName && item.artistName.trim() !== ''
+                        ) {
+                            item.contentId = item.contentId || key;
+
+                            // Calculate Engagement Score
+                            const loves = item.loveCount || 0;
+                            const views = item.views || 0;
+                            const comments = item.commentCount || 0;
+                            const publishedAt = item.publishedAt || item.createdAt || 0;
+                            const timeScore = publishedAt / 10000000000;
+
+                            // Engagement Formula: (Love x 5) + (Views x 1) + (Comments x 3) + Recency
+                            item._score = (loves * 5) + (views * 1) + (comments * 3) + timeScore;
+
+                            allPublishedLyrics.push(item);
+                        }
+                    });
+                }
+
+                // Apply Filters & Render Feeds
+                applyFiltersAndRenderFeeds();
+
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                renderErrorState();
+            });
+        }
+
+        // =============================================================
+        // 5. FILTERING & DUAL FEED GENERATION
+        // =============================================================
+        function applyFiltersAndRenderFeeds() {
+            let result = [...allPublishedLyrics];
+
+            // Language Filter
+            if (selectedLanguage !== 'all') {
+                result = result.filter(item => item.language === selectedLanguage);
+            }
+
+            // Category Filter
+            if (selectedCategory !== 'all') {
+                result = result.filter(item => (item.category || '').toLowerCase() === selectedCategory.toLowerCase());
+            }
+
+            filteredLyrics = result;
+
+            if (filteredLyrics.length === 0) {
+                renderEmptyState();
+                return;
+            }
+
+            // Popular Dataset (Sorted by Engagement Score Descending, Max 10)
+            const popularList = [...filteredLyrics].sort((a, b) => b._score - a._score).slice(0, 10);
+
+            // Latest Dataset (Sorted by Published Time Descending)
+            const latestList = [...filteredLyrics].sort((a, b) => (b.publishedAt || b.createdAt || 0) - (a.publishedAt || a.createdAt || 0));
+
+            // Render Both Sections
+            renderPopularSection(popularList);
+            renderLatestSection(latestList);
+        }
+
+        function setLanguageFilter(lang) {
+            selectedLanguage = lang;
+            latestVisibleLimit = 10;
+
+            document.querySelectorAll('.lang-chip').forEach(btn => {
+                btn.className = "lang-chip px-3.5 py-2 rounded-xl bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap active:scale-95 transition-all";
+            });
+            const active = document.getElementById(`lang-chip-${lang}`);
+            if (active) active.className = "lang-chip px-3.5 py-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/40 whitespace-nowrap active:scale-95 transition-all";
+
+            applyFiltersAndRenderFeeds();
+        }
+
+        function setCategoryFilter(cat) {
+            selectedCategory = cat;
+            latestVisibleLimit = 10;
+            updateCategoryChipsUI();
+            applyFiltersAndRenderFeeds();
+        }
+
+        function updateCategoryChipsUI() {
+            document.querySelectorAll('.cat-chip').forEach(btn => {
+                btn.className = "cat-chip px-3.5 py-2 rounded-xl glass-card text-gray-300 border border-gray-800 hover:text-purple-400 whitespace-nowrap active:scale-95 transition-all";
+            });
+            const active = document.getElementById(`cat-chip-${selectedCategory}`);
+            if (active) {
+                active.className = "cat-chip px-3.5 py-2 rounded-xl bg-purple-500 text-white whitespace-nowrap active:scale-95 transition-all shadow";
+            }
+        }
+
+        // =============================================================
+        // 6. RENDER POPULAR & LATEST CARDS
+        // =============================================================
+        function renderPopularSection(posts) {
+            const container = document.getElementById('popular-feed-container');
+            document.getElementById('popular-count-badge').textContent = `${posts.length} Items`;
+            container.innerHTML = '';
+
+            if (posts.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-500 italic py-2 text-center">কোনো জনপ্রিয় Lyrics পাওয়া যায়নি।</p>`;
+                return;
+            }
+
+            posts.forEach(post => {
+                container.appendChild(createLyricsCardElement(post));
+            });
+        }
+
+        function renderLatestSection(posts) {
+            const container = document.getElementById('latest-feed-container');
+            const loadMoreBtn = document.getElementById('load-more-container');
+            document.getElementById('latest-count-badge').textContent = `${posts.length} Items`;
+            container.innerHTML = '';
+
+            const sliceToShow = posts.slice(0, latestVisibleLimit);
+
+            if (sliceToShow.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-500 italic py-2 text-center">কোনো নতুন Lyrics পাওয়া যায়নি।</p>`;
+                loadMoreBtn.classList.add('hidden');
+                return;
+            }
+
+            sliceToShow.forEach(post => {
+                container.appendChild(createLyricsCardElement(post));
+            });
+
+            if (posts.length > latestVisibleLimit) {
+                loadMoreBtn.classList.remove('hidden');
+            } else {
+                loadMoreBtn.classList.add('hidden');
+            }
+        }
+
+        function handleLoadMoreLatest() {
+            latestVisibleLimit += 10;
+            applyFiltersAndRenderFeeds();
+        }
+
+        // =============================================================
+        // 7. LYRICS CARD DOM BUILDER
+        // =============================================================
+        function createLyricsCardElement(post) {
+            const authorName = `${post.authorFirstName || ''} ${post.authorLastName || ''}`.trim() || 'Poet';
+            const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=8b5cf6&color=fff`;
+            const avatar = post.authorProfilePicture || defaultAvatar;
+            const langFontClass = getLanguageFontClass(post.language);
+
+            const card = document.createElement('article');
+            card.className = "glass-card rounded-2xl p-4 sm:p-5 transition-all duration-200 border border-purple-500/20 hover:border-purple-500/40";
+
+            card.innerHTML = `
+                <!-- Author Header Bar -->
+                <div class="flex items-center justify-between mb-3">
+                    <a href="profile.html?uid=${post.authorId}" class="flex items-center gap-2.5 group">
+                        <img src="${avatar}" loading="lazy" alt="Author" class="w-9 h-9 rounded-full object-cover border border-purple-500/40 group-hover:scale-105 transition-transform">
+                        <div>
+                            <h4 class="text-xs sm:text-sm font-bold text-white group-hover:text-purple-400 transition-colors leading-tight">
+                                ${escapeHtml(authorName)}
+                            </h4>
+                            <p class="text-[10px] text-gray-400 font-medium">
+                                @${escapeHtml(post.authorUsername || 'user')}
+                            </p>
+                        </div>
+                    </a>
+
+                    <!-- Category & Language Badges -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20 text-[10px] font-bold">
+                            ${escapeHtml(post.category || 'General')}
+                        </span>
+                        <span class="px-2 py-0.5 rounded-md bg-gray-800 text-gray-300 text-[10px] font-semibold">
+                            ${escapeHtml(post.language || 'Bangla')}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Mandatory Song & Artist Banner Box -->
+                <div class="mb-3 p-3 rounded-xl bg-purple-950/40 border border-purple-500/30 flex items-center justify-between text-xs">
+                    <div class="truncate">
+                        <p class="text-purple-300 font-extrabold truncate">
+                            <i class="fa-solid fa-music mr-1.5 text-pink-400"></i> ${escapeHtml(post.songName)}
+                        </p>
+                    </div>
+                    <div class="text-gray-300 text-[11px] font-medium truncate ml-2">
+                        <i class="fa-solid fa-microphone mr-1 text-purple-400"></i> ${escapeHtml(post.artistName)}
+                    </div>
+                </div>
+
+                <!-- Lyrics Text Body Preview -->
+                <a href="details.html?id=${post.contentId}" class="block my-3">
+                    <p class="text-sm sm:text-base text-gray-200 leading-relaxed font-normal whitespace-pre-line line-clamp-4 ${langFontClass}">
+                        ${escapeHtml(post.text || '')}
+                    </p>
+                </a>
+
+                <!-- Card Footer Bar -->
+                <div class="pt-3 mt-2 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                    <div class="flex items-center gap-4">
+                        <!-- Love Button -->
+                        <button onclick="toggleLoveReaction('${post.contentId}')" id="love-btn-${post.contentId}" class="flex items-center gap-1.5 hover:text-pink-500 transition-colors active:scale-90">
+                            <i id="love-icon-${post.contentId}" class="fa-regular fa-heart text-base"></i>
+                            <span id="love-count-${post.contentId}" class="font-semibold text-xs">${post.loveCount || 0}</span>
+                        </button>
+
+                        <!-- Comment Count -->
+                        <a href="details.html?id=${post.contentId}" class="flex items-center gap-1.5 hover:text-purple-400 transition-colors">
+                            <i class="fa-regular fa-comment text-base"></i>
+                            <span class="font-semibold text-xs">${post.commentCount || 0}</span>
+                        </a>
+
+                        <!-- Views Count -->
+                        <div class="flex items-center gap-1 text-gray-500">
+                            <i class="fa-regular fa-eye text-xs"></i>
+                            <span class="text-[11px] font-medium">${post.views || 0}</span>
+                        </div>
+                    </div>
+
+                    <!-- Share & Read More Link -->
+                    <div class="flex items-center gap-3">
+                        <button onclick="shareLyrics('${post.contentId}', '${escapeJsString(post.songName)}', '${escapeJsString(post.text)}')" class="p-1.5 hover:text-white transition-colors" title="শেয়ার করুন">
+                            <i class="fa-solid fa-share-nodes text-sm"></i>
+                        </button>
+                        <a href="details.html?id=${post.contentId}" class="text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1">
+                            আরও পড়ুন <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            // Trigger Realtime View Register
+            registerPostView(post.contentId);
+
+            // Sync Reaction State if user logged in
+            checkUserLoveState(post.contentId);
+
+            return card;
+        }
+
+        // =============================================================
+        // 8. REALTIME LOVE REACTION TOGGLE
+        // =============================================================
+        function checkUserLoveState(contentId) {
+            if (!currentUser || !db) return;
+
+            const reactionRef = db.ref(`reactions/${contentId}/${currentUser.uid}`);
+            reactionRef.on('value', (snapshot) => {
+                const icon = document.getElementById(`love-icon-${contentId}`);
+                const btn = document.getElementById(`love-btn-${contentId}`);
+
+                if (snapshot.exists() && snapshot.val()) {
+                    if (icon) icon.className = "fa-solid fa-heart text-base text-pink-500 animate-bounce";
+                    if (btn) btn.classList.add('text-pink-500');
+                } else {
+                    if (icon) icon.className = "fa-regular fa-heart text-base";
+                    if (btn) btn.classList.remove('text-pink-500');
+                }
+            });
+        }
+
+        function toggleLoveReaction(contentId) {
+            if (!currentUser) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!db) return;
+
+            const reactionRef = db.ref(`reactions/${contentId}/${currentUser.uid}`);
+            const contentLoveRef = db.ref(`content/${contentId}/loveCount`);
+
+            reactionRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    reactionRef.remove();
+                    contentLoveRef.transaction(count => Math.max(0, (count || 1) - 1));
+                } else {
+                    reactionRef.set(true);
+                    contentLoveRef.transaction(count => (count || 0) + 1);
+                }
+            });
+        }
+
+        // =============================================================
+        // 9. VIEW COUNTER (Session Throttled)
+        // =============================================================
+        function registerPostView(contentId) {
+            if (!db) return;
+
+            const sessionKey = `viewed_${contentId}`;
+            if (sessionStorage.getItem(sessionKey)) return;
+
+            sessionStorage.setItem(sessionKey, 'true');
+
+            const viewsRef = db.ref(`content/${contentId}/views`);
+            viewsRef.transaction(views => (views || 0) + 1);
+        }
+
+        // =============================================================
+        // 10. NATIVE SHARE SYSTEM
+        // =============================================================
+        function shareLyrics(contentId, songName, text) {
+            const shareUrl = `${window.location.origin}/details.html?id=${contentId}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: songName ? `Lyrics: ${songName}` : 'LyricsVerse',
+                    text: text ? `"${text.substring(0, 80)}..."` : 'Check out this song lyrics!',
+                    url: shareUrl
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('লিংক কপি হয়েছে');
+                }).catch(() => {
+                    alert(`Share URL: ${shareUrl}`);
+                });
+            }
+        }
+
+        // =============================================================
+        // 11. EMPTY & ERROR STATES
+        // =============================================================
+        function renderEmptyState() {
+            const popularContainer = document.getElementById('popular-feed-container');
+            const latestContainer = document.getElementById('latest-feed-container');
+            document.getElementById('load-more-container').classList.add('hidden');
+
+            popularContainer.innerHTML = '';
+            latestContainer.innerHTML = `
+                <div class="glass-card rounded-2xl p-8 text-center border border-gray-800">
+                    <div class="w-16 h-16 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-2xl mx-auto mb-4">
+                        <i class="fa-solid fa-compact-disc"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-1">
+                        এখনো কোনো Lyrics publish হয়নি।
+                    </h3>
+                    <p class="text-xs text-gray-400 max-w-xs mx-auto mb-6 leading-relaxed">
+                        তুমিই প্রথম Lyrics publish করতে পারো। 🎵
+                    </p>
+                    <a href="${currentUser ? 'create.html' : 'register.html'}" class="inline-flex items-center gap-2 btn-gradient px-6 py-2.5 rounded-xl text-white font-bold text-xs shadow-lg shadow-purple-500/20 active:scale-95 transition-all">
+                        <i class="fa-solid fa-plus"></i> Lyrics লিখুন
+                    </a>
+                </div>
+            `;
+        }
+
+        function renderErrorState() {
+            const latestContainer = document.getElementById('latest-feed-container');
+            latestContainer.innerHTML = `
+                <div class="glass-card rounded-2xl p-6 text-center border border-red-500/20">
+                    <i class="fa-solid fa-triangle-exclamation text-red-400 text-3xl mb-2"></i>
+                    <h3 class="text-sm font-bold text-white">Lyrics load করা যাচ্ছে না।</h3>
+                    <p class="text-xs text-gray-400 mt-1 mb-4">Please check your internet connection.</p>
+                    <button onclick="loadLyricsFromFirebase()" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold">
+                        আবার চেষ্টা করুন
+                    </button>
+                </div>
+            `;
+        }
+
+        // Helper Functions
+        function getLanguageFontClass(lang) {
+            if (lang === 'Bangla') return 'font-bangla';
+            if (lang === 'Hindi') return 'font-hindi';
+            return 'font-sans';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escapeJsString(str) {
+            if (!str) return '';
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+        }
+    </script>
+</body>
+</html>
