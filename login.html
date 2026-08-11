@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - ShayariVerse</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            dark: '#070913',
+                            card: '#111827',
+                            border: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase Compat SDKs (Auth & Realtime Database ONLY) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #070913;
+            color: #f3f4f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            transition: all 0.2s ease;
+        }
+
+        .btn-gradient:active {
+            transform: scale(0.98);
+        }
+
+        .btn-gradient:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .glow-bg {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* OTP Input Chrome Autofill Overrides */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #ffffff;
+            -webkit-box-shadow: 0 0 0px 1000px #111827 inset;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* Hide Number Spinner */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between p-4 sm:p-6 relative selection:bg-pink-500 selection:text-white">
+
+    <!-- Background Accent Glows -->
+    <div class="glow-bg w-72 h-72 bg-pink-600 -top-10 -left-10"></div>
+    <div class="glow-bg w-80 h-80 bg-purple-600 -bottom-10 -right-10"></div>
+
+    <!-- TOP HEADER / BACK NAVIGATION -->
+    <header class="w-full max-w-md mx-auto relative z-10 pt-2 pb-4">
+        <a href="index.html" class="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-pink-400 transition-colors py-2 px-1">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+            <span>Back to Home</span>
+        </a>
+    </header>
+
+    <!-- MAIN LOGIN CONTAINER -->
+    <main class="w-full max-w-md mx-auto my-auto relative z-10">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-pink-500/20">
+            
+            <!-- BRAND LOGO & HEADINGS -->
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 rounded-2xl btn-gradient mx-auto flex items-center justify-center text-white text-xl font-bold mb-3 shadow-lg shadow-pink-500/20">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <h1 class="text-xl font-extrabold tracking-tight text-white">
+                    Shayari<span class="text-gradient">Verse</span>
+                </h1>
+                <p class="text-[10px] text-pink-400 font-semibold uppercase tracking-wider mt-0.5">
+                    Shayari • Lyrics • Emotions
+                </p>
+
+                <h2 class="text-2xl font-bold text-white mt-5">Welcome Back</h2>
+                <p class="text-xs text-gray-400 mt-1">Login to continue to your account</p>
+            </div>
+
+            <!-- ALERT / ERROR MESSAGE DISPLAY -->
+            <div id="alert-box" class="hidden p-3.5 mb-5 rounded-xl text-xs font-medium border flex items-start gap-2.5 transition-all">
+                <i id="alert-icon" class="fa-solid fa-circle-exclamation text-base shrink-0 mt-0.5"></i>
+                <span id="alert-message" class="leading-relaxed"></span>
+            </div>
+
+            <!-- STEP 1: PHONE NUMBER FORM -->
+            <form id="phone-form" onsubmit="handleSendOTP(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1.5">Phone Number</label>
+                    <div class="flex items-center gap-2">
+                        <!-- Country Code Badge -->
+                        <div class="px-3.5 py-3.5 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 font-bold text-xs flex items-center gap-1.5 shrink-0">
+                            <span>🇧🇩</span>
+                            <span>+880</span>
+                        </div>
+                        <!-- Number Input -->
+                        <div class="relative flex-1">
+                            <input type="tel" id="phone-input" placeholder="1XXXXXXXXX" required pattern="[0-9]*" inputmode="numeric" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all font-medium">
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-gray-500 mt-1.5 ml-1">Enter 10-digit mobile number (e.g. 01712345678)</p>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="send-otp-btn" class="w-full btn-gradient py-3.5 rounded-xl text-white font-bold text-xs tracking-wider uppercase shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <span id="send-btn-text">Send OTP</span>
+                    <i id="send-btn-spinner" class="fa-solid fa-circle-notch fa-spin hidden text-sm"></i>
+                </button>
+            </form>
+
+            <!-- STEP 2: OTP VERIFICATION FORM (HIDDEN INITIALLY) -->
+            <form id="otp-form" onsubmit="handleVerifyOTP(event)" class="hidden space-y-5">
+                <div class="text-center">
+                    <p class="text-xs text-gray-300">Enter the 6-digit verification code sent to:</p>
+                    <p id="target-phone-display" class="text-sm font-bold text-pink-400 mt-1"></p>
+                </div>
+
+                <!-- 6 Separate OTP Digit Input Boxes -->
+                <div class="flex items-center justify-center gap-2 my-2">
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-1" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-2" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-3" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-4" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-5" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-6" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
+                </div>
+
+                <!-- Timer & Resend Option -->
+                <div class="flex items-center justify-between text-xs px-1">
+                    <button type="button" onclick="changePhoneNumber()" class="text-gray-400 hover:text-pink-400 transition-colors">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i> Change Number
+                    </button>
+                    <div>
+                        <span id="resend-timer" class="text-gray-400">Resend code in <strong id="timer-seconds" class="text-pink-400">60</strong>s</span>
+                        <button type="button" id="resend-otp-btn" onclick="resendOTP()" class="hidden text-pink-400 font-semibold hover:underline">
+                            Resend OTP
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Submit OTP Button -->
+                <button type="submit" id="verify-otp-btn" class="w-full btn-gradient py-3.5 rounded-xl text-white font-bold text-xs tracking-wider uppercase shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <span id="verify-btn-text">Verify &amp; Login</span>
+                    <i id="verify-btn-spinner" class="fa-solid fa-circle-notch fa-spin hidden text-sm"></i>
+                </button>
+            </form>
+
+            <!-- Invisible Recaptcha Container -->
+            <div id="recaptcha-container"></div>
+
+            <!-- FOOTER REGISTER LINK -->
+            <div class="mt-6 pt-5 border-t border-gray-800/80 text-center text-xs text-gray-400">
+                <span>Don't have an account?</span>
+                <a href="register.html" class="text-pink-400 font-bold hover:underline ml-1">Create Account</a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER COPYRIGHT -->
+    <footer class="w-full max-w-md mx-auto text-center py-4 relative z-10 text-[11px] text-gray-500">
+        &copy; <span id="year-span"></span> ShayariVerse. All rights reserved.
+    </footer>
+
+    <!-- JAVASCRIPT & FIREBASE AUTHENTICATION LOGIC -->
+    <script>
+        // =============================================================
+        // 1. FIREBASE CONFIGURATION & INITIALIZATION
+        // =============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFPd0umYUjpFBH08GNhpvjPA00kTh6Y5c",
+            authDomain: "unlimited-73d64.firebaseapp.com",
+            databaseURL: "https://unlimited-73d64-default-rtdb.firebaseio.com",
+            projectId: "unlimited-73d64",
+            storageBucket: "unlimited-73d64.firebasestorage.app",
+            messagingSenderId: "1089467648940",
+            appId: "1:1089467648940:web:2886be4ec3148bee08c809"
+        };
+
+        let app, auth, db;
+        let confirmationResultObj = null;
+        let recaptchaVerifier = null;
+        let countdownInterval = null;
+
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.app();
+                }
+                auth = firebase.auth();
+                db = firebase.database();
+            }
+        } catch (e) {
+            console.warn("Firebase Init Error:", e.message);
+        }
+
+        document.getElementById('year-span').textContent = new Date().getFullYear();
+
+        // =============================================================
+        // 2. CHECK ALREADY LOGGED IN STATE
+        // =============================================================
+        if (auth) {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Check if profile exists before redirect
+                    checkUserProfileAndRedirect(user.uid);
+                }
+            });
+        }
+
+        // =============================================================
+        // 3. RECAPTCHA SETUP
+        // =============================================================
+        function setupRecaptcha() {
+            if (!auth) return;
+            if (!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    'size': 'invisible',
+                    'callback': (response) => {
+                        // reCAPTCHA solved
+                    },
+                    'expired-callback': () => {
+                        showAlert('reCAPTCHA expired. Please try sending OTP again.', 'error');
+                    }
+                });
+            }
+        }
+
+        // =============================================================
+        // 4. PHONE NUMBER NORMALIZATION & VALIDATION (BANGLADESH)
+        // =============================================================
+        function normalizeBDPhone(rawPhone) {
+            if (!rawPhone) return null;
+            let cleaned = rawPhone.trim().replace(/[\s\-\(\)]/g, '');
+
+            if (cleaned.startsWith('+880')) {
+                cleaned = cleaned.substring(4);
+            } else if (cleaned.startsWith('880')) {
+                cleaned = cleaned.substring(3);
+            }
+
+            if (cleaned.startsWith('0')) {
+                cleaned = cleaned.substring(1);
+            }
+
+            // Valid BD format: 10 digits starting with 13-19
+            if (/^1[3-9]\d{8}$/.test(cleaned)) {
+                return '+880' + cleaned;
+            }
+
+            return null;
+        }
+
+        // =============================================================
+        // 5. SEND OTP HANDLER
+        // =============================================================
+        function handleSendOTP(event) {
+            event.preventDefault();
+            hideAlert();
+
+            const phoneInput = document.getElementById('phone-input').value;
+            const normalizedPhone = normalizeBDPhone(phoneInput);
+
+            if (!normalizedPhone) {
+                showAlert('Please enter a valid Bangladesh phone number (e.g. 01712345678).', 'error');
+                return;
+            }
+
+            setLoadingState('send', true);
+
+            try {
+                setupRecaptcha();
+                const appVerifier = window.recaptchaVerifier;
+
+                auth.signInWithPhoneNumber(normalizedPhone, appVerifier)
+                    .then((confirmationResult) => {
+                        confirmationResultObj = confirmationResult;
+                        setLoadingState('send', false);
+                        showAlert('OTP sent successfully to ' + normalizedPhone, 'success');
+                        
+                        // Switch UI to OTP Form
+                        document.getElementById('phone-form').classList.add('hidden');
+                        document.getElementById('otp-form').classList.remove('hidden');
+                        document.getElementById('target-phone-display').textContent = normalizedPhone;
+                        
+                        // Focus first OTP box
+                        document.getElementById('otp-1').focus();
+
+                        // Start Resend Timer
+                        startResendTimer();
+                    })
+                    .catch((error) => {
+                        setLoadingState('send', false);
+                        if (window.recaptchaVerifier) {
+                            window.recaptchaVerifier.render().then(widgetId => {
+                                grecaptcha.reset(widgetId);
+                            });
+                        }
+                        handleFirebaseError(error);
+                    });
+            } catch (err) {
+                setLoadingState('send', false);
+                showAlert('Unable to initialize authentication. Check network connection.', 'error');
+            }
+        }
+
+        // =============================================================
+        // 6. VERIFY OTP HANDLER
+        // =============================================================
+        function handleVerifyOTP(event) {
+            event.preventDefault();
+            hideAlert();
+
+            const otpCode = getOTPValue();
+
+            if (otpCode.length !== 6) {
+                showAlert('Please enter the complete 6-digit verification code.', 'error');
+                return;
+            }
+
+            if (!confirmationResultObj) {
+                showAlert('Session expired. Please request a new OTP.', 'error');
+                changePhoneNumber();
+                return;
+            }
+
+            setLoadingState('verify', true);
+
+            confirmationResultObj.confirm(otpCode)
+                .then((result) => {
+                    const user = result.user;
+                    showAlert('OTP verified! Checking account...', 'success');
+                    checkUserProfileAndRedirect(user.uid);
+                })
+                .catch((error) => {
+                    setLoadingState('verify', false);
+                    handleFirebaseError(error);
+                });
+        }
+
+        // =============================================================
+        // 7. USER PROFILE CHECK & REDIRECT FLOW
+        // =============================================================
+        function checkUserProfileAndRedirect(uid) {
+            if (!db) {
+                window.location.href = "home.html";
+                return;
+            }
+
+            db.ref(`users/${uid}`).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists() && snapshot.val().username) {
+                        // Profile exists -> Redirect to Home
+                        window.location.href = "home.html";
+                    } else {
+                        // Profile missing -> Redirect to Register to complete profile
+                        window.location.href = "register.html";
+                    }
+                })
+                .catch(() => {
+                    // Fallback to home on error
+                    window.location.href = "home.html";
+                });
+        }
+
+        // =============================================================
+        // 8. OTP INPUT AUTO-FOCUS & PASTE LOGIC
+        // =============================================================
+        const otpBoxes = document.querySelectorAll('.otp-box');
+
+        otpBoxes.forEach((box, index) => {
+            // Auto focus next box
+            box.addEventListener('input', (e) => {
+                if (e.target.value.length >= 1) {
+                    box.value = e.target.value.slice(0, 1);
+                    if (index < otpBoxes.length - 1) {
+                        otpBoxes[index + 1].focus();
+                    }
+                }
+            });
+
+            // Backspace navigation
+            box.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !box.value && index > 0) {
+                    otpBoxes[index - 1].focus();
+                }
+            });
+
+            // Paste Handler
+            box.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = (e.clipboardData || window.clipboardData).getData('text').trim();
+                if (/^\d{6}$/.test(pastedData)) {
+                    pastedData.split('').forEach((char, i) => {
+                        if (otpBoxes[i]) otpBoxes[i].value = char;
+                    });
+                    otpBoxes[5].focus();
+                }
+            });
+        });
+
+        function getOTPValue() {
+            let code = '';
+            otpBoxes.forEach(box => code += box.value);
+            return code;
+        }
+
+        function clearOTPInputs() {
+            otpBoxes.forEach(box => box.value = '');
+        }
+
+        // =============================================================
+        // 9. RESEND OTP & TIMER LOGIC
+        // =============================================================
+        function startResendTimer() {
+            let seconds = 60;
+            const timerSpan = document.getElementById('timer-seconds');
+            const resendTimerDiv = document.getElementById('resend-timer');
+            const resendBtn = document.getElementById('resend-otp-btn');
+
+            resendTimerDiv.classList.remove('hidden');
+            resendBtn.classList.add('hidden');
+            timerSpan.textContent = seconds;
+
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                seconds--;
+                timerSpan.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    resendTimerDiv.classList.add('hidden');
+                    resendBtn.classList.remove('hidden');
+                }
+            }, 1000);
+        }
+
+        function resendOTP() {
+            clearOTPInputs();
+            handleSendOTP(new Event('submit'));
+        }
+
+        function changePhoneNumber() {
+            clearInterval(countdownInterval);
+            confirmationResultObj = null;
+            clearOTPInputs();
+            document.getElementById('otp-form').classList.add('hidden');
+            document.getElementById('phone-form').classList.remove('hidden');
+            hideAlert();
+        }
+
+        // =============================================================
+        // 10. UI HELPERS & FRIENDLY ERROR HANDLING
+        // =============================================================
+        function showAlert(message, type = 'error') {
+            const alertBox = document.getElementById('alert-box');
+            const alertMsg = document.getElementById('alert-message');
+            const alertIcon = document.getElementById('alert-icon');
+
+            alertMsg.textContent = message;
+            alertBox.classList.remove('hidden', 'bg-red-500/10', 'border-red-500/30', 'text-red-300', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300');
+
+            if (type === 'error') {
+                alertBox.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-300');
+                alertIcon.className = "fa-solid fa-circle-exclamation text-base shrink-0 mt-0.5 text-red-400";
+            } else {
+                alertBox.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300');
+                alertIcon.className = "fa-solid fa-circle-check text-base shrink-0 mt-0.5 text-emerald-400";
+            }
+        }
+
+        function hideAlert() {
+            document.getElementById('alert-box').classList.add('hidden');
+        }
+
+        function setLoadingState(action, isLoading) {
+            if (action === 'send') {
+                const btn = document.getElementById('send-otp-btn');
+                const text = document.getElementById('send-btn-text');
+                const spinner = document.getElementById('send-btn-spinner');
+                btn.disabled = isLoading;
+                if (isLoading) {
+                    text.textContent = 'Sending OTP...';
+                    spinner.classList.remove('hidden');
+                } else {
+                    text.textContent = 'Send OTP';
+                    spinner.classList.add('hidden');
+                }
+            } else if (action === 'verify') {
+                const btn = document.getElementById('verify-otp-btn');
+                const text = document.getElementById('verify-btn-text');
+                const spinner = document.getElementById('verify-btn-spinner');
+                btn.disabled = isLoading;
+                if (isLoading) {
+                    text.textContent = 'Verifying...';
+                    spinner.classList.remove('hidden');
+                } else {
+                    text.textContent = 'Verify & Login';
+                    spinner.classList.add('hidden');
+                }
+            }
+        }
+
+        function handleFirebaseError(error) {
+            console.error("Auth Error Code:", error.code);
+            let friendlyMsg = 'An error occurred. Please try again.';
+
+            switch (error.code) {
+                case 'auth/invalid-phone-number':
+                    friendlyMsg = 'Please enter a valid Bangladesh phone number.';
+                    break;
+                case 'auth/too-many-requests':
+                    friendlyMsg = 'Too many attempts. Please wait a few minutes and try again.';
+                    break;
+                case 'auth/invalid-verification-code':
+                    friendlyMsg = 'Invalid verification code. Please check and try again.';
+                    break;
+                case 'auth/code-expired':
+                    friendlyMsg = 'Verification code has expired. Please request a new one.';
+                    break;
+                case 'auth/network-request-failed':
+                    friendlyMsg = 'Network error. Please check your internet connection.';
+                    break;
+                case 'auth/captcha-check-failed':
+                    friendlyMsg = 'reCAPTCHA verification failed. Please refresh and try again.';
+                    break;
+            }
+
+            showAlert(friendlyMsg, 'error');
+        }
+    </script>
+</body>
+</html>
