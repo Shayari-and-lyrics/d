@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Details - ShayariVerse</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tiro+Bangla&family=Hind:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            dark: '#070913',
+                            card: '#111827',
+                            border: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        bangla: ['Tiro Bangla', 'serif'],
+                        hindi: ['Hind', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase Compat SDKs (Auth & Realtime Database ONLY) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #070913;
+            color: #f3f4f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 90px; /* Space for bottom navbar */
+        }
+
+        .glass-header {
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-nav {
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        }
+
+        .btn-gradient:active {
+            transform: scale(0.97);
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col selection:bg-pink-500 selection:text-white">
+
+    <!-- TOP STICKY HEADER -->
+    <header class="glass-header fixed top-0 left-0 right-0 z-40 h-16 transition-all duration-200">
+        <div class="max-w-2xl mx-auto h-full px-4 flex items-center justify-between">
+            
+            <!-- Back Button -->
+            <button onclick="handleHeaderBack()" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-800/60 active:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-arrow-left text-base"></i>
+            </button>
+
+            <!-- Header Title -->
+            <h1 class="text-base font-extrabold text-white tracking-tight">
+                বিস্তারিত (Details)
+            </h1>
+
+            <!-- Top Share Button -->
+            <button onclick="shareMainContent()" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-800/60 active:bg-gray-800 transition-colors" title="Share">
+                <i class="fa-solid fa-share-nodes text-base"></i>
+            </button>
+
+        </div>
+    </header>
+
+    <!-- MAIN DETAILS CONTAINER -->
+    <main class="pt-20 px-3 sm:px-4 max-w-2xl mx-auto w-full flex-grow">
+
+        <!-- ERROR / LOADING CONTAINER -->
+        <div id="status-container" class="space-y-4">
+            
+            <!-- Skeleton Loading State -->
+            <div id="skeleton-loader" class="glass-card rounded-3xl p-6 space-y-4 animate-pulse">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-gray-800"></div>
+                    <div class="space-y-2 flex-1">
+                        <div class="h-3 bg-gray-800 rounded w-1/3"></div>
+                        <div class="h-2.5 bg-gray-800/60 rounded w-1/4"></div>
+                    </div>
+                </div>
+                <div class="space-y-2 py-4">
+                    <div class="h-4 bg-gray-800 rounded w-full"></div>
+                    <div class="h-4 bg-gray-800 rounded w-5/6"></div>
+                    <div class="h-4 bg-gray-800 rounded w-4/6"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MAIN CONTENT DISPLAY CARD (HIDDEN INITIALLY) -->
+        <article id="details-card" class="hidden glass-card rounded-3xl p-5 sm:p-7 border border-pink-500/20 shadow-2xl relative mb-6">
+            
+            <!-- CREATOR INFO BAR -->
+            <div class="flex items-center justify-between pb-4 border-b border-gray-800/80 mb-4">
+                <a id="creator-profile-link" href="#" class="flex items-center gap-3 group">
+                    <img id="author-avatar" src="https://ui-avatars.com/api/?name=User&background=ec4899&color=fff" class="w-12 h-12 rounded-full object-cover border-2 border-pink-500/50 group-hover:scale-105 transition-transform">
+                    <div>
+                        <h2 id="author-name" class="text-sm sm:text-base font-bold text-white group-hover:text-pink-400 transition-colors leading-tight">
+                            Author Name
+                        </h2>
+                        <p id="author-username" class="text-xs text-gray-400 font-medium">@username</p>
+                    </div>
+                </a>
+
+                <!-- Content Type & Language Badges -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <span id="badge-type" class="px-2.5 py-1 rounded-lg bg-pink-500/10 text-pink-400 border border-pink-500/20 text-xs font-bold uppercase">
+                        Shayari
+                    </span>
+                    <span id="badge-lang" class="px-2.5 py-1 rounded-lg bg-gray-800 text-gray-300 text-xs font-semibold">
+                        Bangla
+                    </span>
+                </div>
+            </div>
+
+            <!-- LYRICS SPECIFIC SONG & ARTIST BOX (SHOWN ONLY IF TYPE === LYRICS) -->
+            <div id="lyrics-music-box" class="hidden mb-5 p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-compact-disc"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-purple-300 uppercase tracking-wider font-bold">Song Name</p>
+                        <h3 id="lyrics-song-title" class="text-sm sm:text-base font-extrabold text-white">Song Title</h3>
+                    </div>
+                </div>
+                <div class="pl-12 sm:pl-0 sm:text-right">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Artist / Singer</p>
+                    <p id="lyrics-artist-name" class="text-xs sm:text-sm font-bold text-gray-200">Singer Name</p>
+                </div>
+            </div>
+
+            <!-- MAIN POETIC TEXT BODY -->
+            <div class="py-3">
+                <p id="content-body-text" class="text-base sm:text-lg text-gray-100 leading-relaxed font-normal whitespace-pre-line tracking-wide">
+                    <!-- Dynamic Text -->
+                </p>
+            </div>
+
+            <!-- PUBLISHED TIME & VIEW STATS ROW -->
+            <div class="flex items-center justify-between text-xs text-gray-400 pt-4 mt-2 border-t border-gray-800/80">
+                <span id="published-date" class="text-[11px] font-medium text-gray-400">
+                    <i class="fa-regular fa-clock mr-1"></i> Published: --
+                </span>
+                <span id="view-count-display" class="text-[11px] font-medium text-gray-400">
+                    <i class="fa-regular fa-eye mr-1 text-blue-400"></i> 0 views
+                </span>
+            </div>
+
+            <!-- PRIMARY INTERACTION BAR (LOVE, COPY, FAVORITE, SHARE) -->
+            <div class="grid grid-cols-4 gap-2 pt-4 mt-3 border-t border-gray-800/80 text-center">
+                
+                <!-- 1. Love Button -->
+                <button onclick="toggleLoveReaction()" id="btn-love" class="py-2.5 rounded-xl glass-card flex flex-col items-center justify-center gap-1 hover:border-pink-500/40 transition-colors active:scale-95">
+                    <i id="icon-love" class="fa-regular fa-heart text-lg text-gray-300"></i>
+                    <span id="label-love-count" class="text-[11px] font-bold text-gray-300">0</span>
+                </button>
+
+                <!-- 2. Copy Text Button -->
+                <button onclick="copyFullContentText()" id="btn-copy" class="py-2.5 rounded-xl glass-card flex flex-col items-center justify-center gap-1 hover:border-purple-500/40 transition-colors active:scale-95">
+                    <i id="icon-copy" class="fa-regular fa-copy text-lg text-gray-300"></i>
+                    <span id="label-copy" class="text-[11px] font-bold text-gray-300">কপি করুন</span>
+                </button>
+
+                <!-- 3. Favorite Save Button -->
+                <button onclick="toggleFavorite()" id="btn-favorite" class="py-2.5 rounded-xl glass-card flex flex-col items-center justify-center gap-1 hover:border-yellow-500/40 transition-colors active:scale-95">
+                    <i id="icon-favorite" class="fa-regular fa-bookmark text-lg text-gray-300"></i>
+                    <span id="label-favorite" class="text-[11px] font-bold text-gray-300">সেভ করুন</span>
+                </button>
+
+                <!-- 4. Native Share Button -->
+                <button onclick="shareMainContent()" class="py-2.5 rounded-xl glass-card flex flex-col items-center justify-center gap-1 hover:border-blue-500/40 transition-colors active:scale-95">
+                    <i class="fa-solid fa-share-nodes text-lg text-gray-300"></i>
+                    <span class="text-[11px] font-bold text-gray-300">শেয়ার</span>
+                </button>
+
+            </div>
+
+        </article>
+
+        <!-- AUTHOR BIO SECTION -->
+        <section id="author-section" class="hidden glass-card rounded-2xl p-4 mb-6 border border-gray-800">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img id="author-bio-avatar" src="https://ui-avatars.com/api/?name=User&background=ec4899&color=fff" class="w-10 h-10 rounded-full object-cover border border-pink-500/50">
+                    <div>
+                        <p class="text-[10px] text-pink-400 font-bold uppercase tracking-wider">Written / Published by</p>
+                        <h4 id="author-bio-name" class="text-xs sm:text-sm font-bold text-white leading-tight">Creator Name</h4>
+                        <p id="author-bio-username" class="text-[11px] text-gray-400">@username</p>
+                    </div>
+                </div>
+                <a id="author-bio-btn" href="#" class="px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-pink-400 text-xs font-bold transition-all border border-gray-700">
+                    প্রোফাইল দেখুন
+                </a>
+            </div>
+        </section>
+
+        <!-- SINGLE COMMENT SYSTEM SECTION -->
+        <section id="comments-section" class="hidden glass-card rounded-3xl p-5 sm:p-6 mb-8 border border-gray-800">
+            
+            <div class="flex items-center justify-between border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-regular fa-comment text-pink-400"></i>
+                    <span>মন্তব্য (<span id="comments-total-count">0</span>)</span>
+                </h3>
+                <span class="text-[10px] text-gray-400">1 comment per user</span>
+            </div>
+
+            <!-- USER COMMENT INPUT / EDIT FORM -->
+            <div id="comment-form-container" class="mb-6">
+                <!-- Dynamic Comment Form Rendered by JS -->
+            </div>
+
+            <!-- COMMENTS LIST -->
+            <div id="comments-list-container" class="space-y-3">
+                <p class="text-xs text-gray-500 text-center italic py-2">কোনো মন্তব্য পাওয়া যায়নি।</p>
+            </div>
+
+        </section>
+
+        <!-- RELATED CONTENT SECTION (MAX 5 ITEMS) -->
+        <section id="related-section" class="hidden space-y-3 mb-8">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 px-1">
+                আরও দেখুন (Related Posts)
+            </h3>
+            
+            <div id="related-posts-container" class="space-y-3">
+                <!-- Related Cards injected by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="glass-nav fixed bottom-0 left-0 right-0 z-50 h-16 px-4 max-w-md mx-auto md:max-w-lg rounded-t-2xl sm:rounded-t-none">
+        <div class="grid grid-cols-5 h-full items-center text-center">
+            
+            <!-- 1. Home -->
+            <a href="home.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[9px] tracking-tight">Home</span>
+            </a>
+
+            <!-- 2. Shayari -->
+            <a href="search.html?type=Shayari" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-feather text-lg"></i>
+                <span class="text-[9px] tracking-tight">Shayari</span>
+            </a>
+
+            <!-- 3. Create Button -->
+            <a id="nav-create-link" href="register.html" class="flex flex-col items-center justify-center">
+                <div class="w-11 h-11 rounded-full btn-gradient flex items-center justify-center text-white shadow-lg shadow-pink-500/30 -mt-5 border-2 border-gray-950 active:scale-95">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                </div>
+                <span class="text-[9px] text-gray-400 tracking-tight mt-0.5">Create</span>
+            </a>
+
+            <!-- 4. Favorites -->
+            <a href="favorites.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-bookmark text-lg"></i>
+                <span class="text-[9px] tracking-tight">Favorites</span>
+            </a>
+
+            <!-- 5. Profile -->
+            <a id="nav-profile-link" href="login.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-user text-lg"></i>
+                <span class="text-[9px] tracking-tight">Profile</span>
+            </a>
+
+        </div>
+    </nav>
+
+    <!-- JAVASCRIPT & FIREBASE REALTIME DB LOGIC -->
+    <script>
+        // =============================================================
+        // 1. FIREBASE CONFIGURATION & INITIALIZATION
+        // =============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFPd0umYUjpFBH08GNhpvjPA00kTh6Y5c",
+            authDomain: "unlimited-73d64.firebaseapp.com",
+            databaseURL: "https://unlimited-73d64-default-rtdb.firebaseio.com",
+            projectId: "unlimited-73d64",
+            storageBucket: "unlimited-73d64.firebasestorage.app",
+            messagingSenderId: "1089467648940",
+            appId: "1:1089467648940:web:2886be4ec3148bee08c809"
+        };
+
+        let app, auth, db;
+        let currentUser = null;
+        let currentUserProfile = null;
+        let currentPost = null;
+        let currentContentId = null;
+
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.app();
+                }
+                auth = firebase.auth();
+                db = firebase.database();
+            }
+        } catch (e) {
+            console.warn("Firebase Init Handling:", e.message);
+        }
+
+        // =============================================================
+        // 2. PARSE URL CONTENT ID & INITIALIZE
+        // =============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentContentId = urlParams.get('contentId') || urlParams.get('id');
+
+            if (!currentContentId) {
+                renderErrorState("Content পাওয়া যায়নি।");
+                return;
+            }
+
+            // Auth State Observer
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    currentUser = user;
+                    const createLink = document.getElementById('nav-create-link');
+                    const profileLink = document.getElementById('nav-profile-link');
+
+                    if (user) {
+                        if (createLink) createLink.href = "create.html";
+                        if (profileLink) profileLink.href = "profile.html";
+                        loadCurrentUserProfile(user.uid);
+                    } else {
+                        if (createLink) createLink.href = "register.html";
+                        if (profileLink) profileLink.href = "login.html";
+                    }
+
+                    // Load Main Content Details
+                    loadContentDetails(currentContentId);
+                });
+            } else {
+                loadContentDetails(currentContentId);
+            }
+        });
+
+        // =============================================================
+        // 3. LOAD CURRENT LOGGED-IN USER PROFILE
+        // =============================================================
+        function loadCurrentUserProfile(uid) {
+            if (!db) return;
+            db.ref(`users/${uid}`).once('value').then(snapshot => {
+                if (snapshot.exists()) {
+                    currentUserProfile = snapshot.val();
+                }
+            });
+        }
+
+        // =============================================================
+        // 4. LOAD & VALIDATE MAIN CONTENT
+        // =============================================================
+        function loadContentDetails(contentId) {
+            if (!db) {
+                renderErrorState("Content load করা যাচ্ছে না।");
+                return;
+            }
+
+            const contentRef = db.ref(`content/${contentId}`);
+
+            contentRef.once('value').then((snapshot) => {
+                if (!snapshot.exists()) {
+                    renderErrorState("Content পাওয়া যায়নি।");
+                    return;
+                }
+
+                currentPost = snapshot.val();
+                currentPost.contentId = currentPost.contentId || contentId;
+
+                // VALIDATION: Only status === 'published'
+                if (currentPost.status !== 'published') {
+                    renderErrorState("এই content আর available নেই।");
+                    return;
+                }
+
+                // VALIDATION for Lyrics: songName & artistName required
+                if (currentPost.type === 'lyrics' && (!currentPost.songName || !currentPost.artistName)) {
+                    renderErrorState("অসম্পূর্ণ Lyrics তথ্য।");
+                    return;
+                }
+
+                // Render Card UI
+                renderDetailsCard(currentPost);
+
+                // Throttled View Counter
+                registerSessionView(contentId);
+
+                // Realtime Sync Reaction & Favorite Status
+                syncReactionAndFavoriteState(contentId);
+
+                // Load Comments
+                loadCommentsSystem(contentId);
+
+                // Load Related Content
+                loadRelatedPosts(currentPost);
+
+            }).catch((err) => {
+                console.error("Error loading content:", err);
+                renderErrorState("Content load করা যাচ্ছে না।");
+            });
+        }
+
+        // =============================================================
+        // 5. RENDER DETAILS CARD
+        // =============================================================
+        function renderDetailsCard(post) {
+            document.getElementById('skeleton-loader').classList.add('hidden');
+            document.getElementById('status-container').classList.add('hidden');
+            
+            document.getElementById('details-card').classList.remove('hidden');
+            document.getElementById('author-section').classList.remove('hidden');
+            document.getElementById('comments-section').classList.remove('hidden');
+            document.getElementById('related-section').classList.remove('hidden');
+
+            const isLyrics = post.type === 'lyrics' || post.type === 'Lyrics';
+            const authorName = `${post.authorFirstName || ''} ${post.authorLastName || ''}`.trim() || 'Poet';
+            const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=ec4899&color=fff`;
+            const avatar = post.authorProfilePicture || defaultAvatar;
+            const langFontClass = getLanguageFontClass(post.language);
+
+            // Creator Header
+            document.getElementById('author-avatar').src = avatar;
+            document.getElementById('author-name').textContent = authorName;
+            document.getElementById('author-username').textContent = `@${post.authorUsername || 'user'}`;
+            document.getElementById('creator-profile-link').href = `profile.html?uid=${post.authorId}`;
+
+            // Author Bio Section
+            document.getElementById('author-bio-avatar').src = avatar;
+            document.getElementById('author-bio-name').textContent = authorName;
+            document.getElementById('author-bio-username').textContent = `@${post.authorUsername || 'user'}`;
+            document.getElementById('author-bio-btn').href = `profile.html?uid=${post.authorId}`;
+
+            // Type & Language Badges
+            document.getElementById('badge-type').textContent = post.type || 'Shayari';
+            document.getElementById('badge-type').className = `px-2.5 py-1 rounded-lg ${isLyrics ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-pink-500/10 text-pink-400 border-pink-500/20'} border text-xs font-bold uppercase`;
+            document.getElementById('badge-lang').textContent = post.language || 'Bangla';
+
+            // Lyrics Specific Box
+            const lyricsBox = document.getElementById('lyrics-music-box');
+            if (isLyrics) {
+                document.getElementById('lyrics-song-title').textContent = post.songName || 'Untitled Song';
+                document.getElementById('lyrics-artist-name').textContent = post.artistName || 'Unknown Singer';
+                lyricsBox.classList.remove('hidden');
+            } else {
+                lyricsBox.classList.add('hidden');
+            }
+
+            // Text Body
+            const bodyTextEl = document.getElementById('content-body-text');
+            bodyTextEl.textContent = post.text || '';
+            bodyTextEl.className = `text-base sm:text-lg text-gray-100 leading-relaxed font-normal whitespace-pre-line tracking-wide ${langFontClass}`;
+
+            // Metadata Date & Views
+            const formattedDate = formatTimestamp(post.publishedAt || post.createdAt);
+            document.getElementById('published-date').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> Published: ${formattedDate}`;
+            document.getElementById('view-count-display').innerHTML = `<i class="fa-regular fa-eye mr-1 text-blue-400"></i> ${post.views || 0} views`;
+            document.getElementById('label-love-count').textContent = post.loveCount || 0;
+        }
+
+        // =============================================================
+        // 6. LOVE REACTION SYSTEM
+        // =============================================================
+        function syncReactionAndFavoriteState(contentId) {
+            if (!db) return;
+
+            // Sync Realtime Love Count
+            db.ref(`content/${contentId}/loveCount`).on('value', (snap) => {
+                const count = snap.val() || 0;
+                document.getElementById('label-love-count').textContent = count;
+            });
+
+            // Sync Current User Love Status
+            if (currentUser) {
+                db.ref(`reactions/${contentId}/${currentUser.uid}`).on('value', (snapshot) => {
+                    const icon = document.getElementById('icon-love');
+                    const btn = document.getElementById('btn-love');
+
+                    if (snapshot.exists() && snapshot.val()) {
+                        icon.className = "fa-solid fa-heart text-lg text-pink-500 animate-bounce";
+                        btn.classList.add('border-pink-500/50');
+                    } else {
+                        icon.className = "fa-regular fa-heart text-lg text-gray-300";
+                        btn.classList.remove('border-pink-500/50');
+                    }
+                });
+
+                // Sync Favorite Status
+                db.ref(`favorites/${currentUser.uid}/${contentId}`).on('value', (snapshot) => {
+                    const icon = document.getElementById('icon-favorite');
+                    const label = document.getElementById('label-favorite');
+
+                    if (snapshot.exists() && snapshot.val()) {
+                        icon.className = "fa-solid fa-bookmark text-lg text-yellow-400";
+                        label.textContent = "সেভ করা হয়েছে";
+                        label.className = "text-[11px] font-bold text-yellow-400";
+                    } else {
+                        icon.className = "fa-regular fa-bookmark text-lg text-gray-300";
+                        label.textContent = "সেভ করুন";
+                        label.className = "text-[11px] font-bold text-gray-300";
+                    }
+                });
+            }
+        }
+
+        function toggleLoveReaction() {
+            if (!currentUser) {
+                alert("Love দিতে Login করুন ❤️");
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!db || !currentContentId) return;
+
+            const reactionRef = db.ref(`reactions/${currentContentId}/${currentUser.uid}`);
+            const loveCountRef = db.ref(`content/${currentContentId}/loveCount`);
+
+            reactionRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    reactionRef.remove();
+                    loveCountRef.transaction(count => Math.max(0, (count || 1) - 1));
+                } else {
+                    reactionRef.set(true);
+                    loveCountRef.transaction(count => (count || 0) + 1);
+                }
+            });
+        }
+
+        // =============================================================
+        // 7. FAVORITE / SAVE SYSTEM
+        // =============================================================
+        function toggleFavorite() {
+            if (!currentUser) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!db || !currentContentId) return;
+
+            const favRef = db.ref(`favorites/${currentUser.uid}/${currentContentId}`);
+
+            favRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    favRef.remove();
+                } else {
+                    favRef.set(true);
+                }
+            });
+        }
+
+        // =============================================================
+        // 8. SINGLE COMMENT SYSTEM (1 COMMENT PER USER)
+        // =============================================================
+        function loadCommentsSystem(contentId) {
+            if (!db) return;
+
+            const commentsRef = db.ref(`comments/${contentId}`);
+
+            commentsRef.on('value', (snapshot) => {
+                const formContainer = document.getElementById('comment-form-container');
+                const listContainer = document.getElementById('comments-list-container');
+                
+                let commentCount = 0;
+                let userHasCommented = false;
+                let userCommentData = null;
+
+                listContainer.innerHTML = '';
+
+                if (snapshot.exists()) {
+                    const commentsData = snapshot.val();
+                    const commentsArray = [];
+
+                    Object.keys(commentsData).forEach(uid => {
+                        commentCount++;
+                        const comment = commentsData[uid];
+                        comment.uid = uid;
+
+                        if (currentUser && uid === currentUser.uid) {
+                            userHasCommented = true;
+                            userCommentData = comment;
+                        }
+
+                        commentsArray.push(comment);
+                    });
+
+                    // Sort newest first
+                    commentsArray.sort((a, b) => b.createdAt - a.createdAt);
+
+                    // Sync Comment Count Badge
+                    document.getElementById('comments-total-count').textContent = commentCount;
+
+                    // Render Comments List
+                    commentsArray.forEach(c => {
+                        const isOwn = currentUser && c.uid === currentUser.uid;
+                        const cAuthorName = `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'User';
+                        const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(cAuthorName)}&background=ec4899&color=fff`;
+                        const cAvatar = c.profilePicture || defaultAvatar;
+
+                        const item = document.createElement('div');
+                        item.className = "p-3 sm:p-4 rounded-2xl bg-gray-900/80 border border-gray-800 space-y-2";
+                        item.innerHTML = `
+                            <div class="flex items-center justify-between">
+                                <a href="profile.html?uid=${c.uid}" class="flex items-center gap-2">
+                                    <img src="${cAvatar}" class="w-7 h-7 rounded-full object-cover border border-pink-500/40">
+                                    <div>
+                                        <h5 class="text-xs font-bold text-white leading-tight">${escapeHtml(cAuthorName)} ${isOwn ? '<span class="text-[9px] bg-pink-500/20 text-pink-400 px-1.5 py-0.2 rounded ml-1">You</span>' : ''}</h5>
+                                        <p class="text-[9px] text-gray-500">@${escapeHtml(c.username || 'user')}</p>
+                                    </div>
+                                </a>
+                                <span class="text-[10px] text-gray-500">${formatTimestamp(c.createdAt)}</span>
+                            </div>
+                            <p class="text-xs text-gray-200 leading-relaxed font-normal pl-9">
+                                ${escapeHtml(c.text)}
+                            </p>
+                        `;
+
+                        listContainer.appendChild(item);
+                    });
+
+                } else {
+                    document.getElementById('comments-total-count').textContent = '0';
+                    listContainer.innerHTML = `<p class="text-xs text-gray-500 text-center italic py-2">কোনো মন্তব্য পাওয়া যায়নি।</p>`;
+                }
+
+                // Render Input Form depending on auth & existing comment
+                renderCommentForm(userHasCommented, userCommentData);
+            });
+        }
+
+        function renderCommentForm(hasCommented, existingData) {
+            const container = document.getElementById('comment-form-container');
+
+            if (!currentUser) {
+                container.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-gray-900 border border-gray-800 text-center">
+                        <p class="text-xs text-gray-400 mb-3">Comment করতে Login করুন</p>
+                        <a href="login.html" class="btn-gradient px-5 py-2 rounded-xl text-white font-bold text-xs inline-block shadow">
+                            Login
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            if (hasCommented && existingData) {
+                // User has already commented -> Show Edit / Delete Option
+                container.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-pink-500/5 border border-pink-500/20 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-pink-400"><i class="fa-solid fa-pen mr-1"></i> Your Comment</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="deleteOwnComment()" class="text-[11px] text-red-400 hover:underline">Delete</button>
+                            </div>
+                        </div>
+                        <textarea id="edit-comment-input" max="250" class="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-xs text-white focus:border-pink-500 focus:outline-none resize-none" rows="2">${escapeHtml(existingData.text)}</textarea>
+                        <button onclick="updateOwnComment()" class="btn-gradient px-4 py-2 rounded-xl text-white font-bold text-xs shadow float-right">
+                            Edit Comment
+                        </button>
+                        <div class="clear-both"></div>
+                    </div>
+                `;
+            } else {
+                // User has not commented -> Show New Comment Form
+                container.innerHTML = `
+                    <form onsubmit="handlePostComment(event)" class="space-y-2">
+                        <textarea id="new-comment-input" placeholder="আপনার মতামত লিখুন..." required max="250" class="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-xs text-white focus:border-pink-500 focus:outline-none resize-none" rows="2"></textarea>
+                        <button type="submit" class="btn-gradient px-5 py-2.5 rounded-xl text-white font-bold text-xs shadow active:scale-95 transition-all float-right">
+                            Comment
+                        </button>
+                        <div class="clear-both"></div>
+                    </form>
+                `;
+            }
+        }
+
+        function handlePostComment(e) {
+            e.preventDefault();
+            if (!currentUser || !currentContentId || !db) return;
+
+            const input = document.getElementById('new-comment-input');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            const profile = currentUserProfile || {};
+            const commentObj = {
+                text: text,
+                createdAt: Date.now(),
+                username: profile.username || 'user',
+                firstName: profile.firstName || 'User',
+                lastName: profile.lastName || '',
+                profilePicture: profile.profilePicture || ''
+            };
+
+            // Write Single Comment
+            db.ref(`comments/${currentContentId}/${currentUser.uid}`).set(commentObj).then(() => {
+                // Increment Comment Count on Post
+                db.ref(`content/${currentContentId}/commentCount`).transaction(count => (count || 0) + 1);
+            });
+        }
+
+        function updateOwnComment() {
+            if (!currentUser || !currentContentId || !db) return;
+            const input = document.getElementById('edit-comment-input');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            db.ref(`comments/${currentContentId}/${currentUser.uid}/text`).set(text);
+            db.ref(`comments/${currentContentId}/${currentUser.uid}/createdAt`).set(Date.now());
+        }
+
+        function deleteOwnComment() {
+            if (!currentUser || !currentContentId || !db) return;
+            if (!confirm("Are you sure you want to delete your comment?")) return;
+
+            db.ref(`comments/${currentContentId}/${currentUser.uid}`).remove().then(() => {
+                db.ref(`content/${currentContentId}/commentCount`).transaction(count => Math.max(0, (count || 1) - 1));
+            });
+        }
+
+        // =============================================================
+        // 9. RELATED CONTENT LOADER (MAX 5)
+        // =============================================================
+        function loadRelatedPosts(mainPost) {
+            if (!db) return;
+
+            db.ref('content').once('value').then(snapshot => {
+                if (!snapshot.exists()) return;
+
+                const raw = snapshot.val();
+                const relatedList = [];
+
+                Object.keys(raw).forEach(key => {
+                    const item = raw[key];
+                    item.contentId = item.contentId || key;
+
+                    // Match same category OR type, excluding current post & status must be published
+                    if (
+                        item.contentId !== mainPost.contentId &&
+                        item.status === 'published' &&
+                        (item.category === mainPost.category || item.type === mainPost.type)
+                    ) {
+                        relatedList.push(item);
+                    }
+                });
+
+                if (relatedList.length === 0) {
+                    document.getElementById('related-section').classList.add('hidden');
+                    return;
+                }
+
+                // Take Max 5 items
+                const top5Related = relatedList.slice(0, 5);
+                const container = document.getElementById('related-posts-container');
+                container.innerHTML = '';
+
+                top5Related.forEach(item => {
+                    const itemAuthor = `${item.authorFirstName || ''} ${item.authorLastName || ''}`.trim() || 'Poet';
+                    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(itemAuthor)}&background=ec4899&color=fff`;
+                    const avatar = item.authorProfilePicture || defaultAvatar;
+
+                    const card = document.createElement('a');
+                    card.href = `details.html?id=${item.contentId}`;
+                    card.className = "glass-card p-3.5 rounded-2xl block hover:border-pink-500/30 transition-all";
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <img src="${avatar}" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-xs font-bold text-white truncate max-w-[120px]">${escapeHtml(itemAuthor)}</span>
+                            </div>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-gray-800 text-pink-400 font-semibold uppercase">${escapeHtml(item.type || 'Shayari')}</span>
+                        </div>
+                        <p class="text-xs text-gray-300 line-clamp-3 mb-2">${escapeHtml(item.text || '')}</p>
+                        <div class="flex items-center gap-3 text-[10px] text-gray-500">
+                            <span><i class="fa-regular fa-heart mr-1"></i> ${item.loveCount || 0}</span>
+                            <span><i class="fa-regular fa-comment mr-1"></i> ${item.commentCount || 0}</span>
+                            <span><i class="fa-regular fa-eye mr-1"></i> ${item.views || 0}</span>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        // =============================================================
+        // 10. THROTTLED VIEW COUNTER
+        // =============================================================
+        function registerSessionView(contentId) {
+            if (!db) return;
+            const sessionKey = `viewed_details_${contentId}`;
+            if (sessionStorage.getItem(sessionKey)) return;
+
+            sessionStorage.setItem(sessionKey, 'true');
+            db.ref(`content/${contentId}/views`).transaction(v => (v || 0) + 1);
+        }
+
+        // =============================================================
+        // 11. COPY & SHARE ACTIONS
+        // =============================================================
+        function copyFullContentText() {
+            if (!currentPost) return;
+
+            let textToCopy = '';
+            if (currentPost.type === 'lyrics' || currentPost.type === 'Lyrics') {
+                textToCopy = `Song: ${currentPost.songName || ''}\nArtist: ${currentPost.artistName || ''}\n\n${currentPost.text || ''}`;
+            } else {
+                textToCopy = currentPost.text || '';
+            }
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const label = document.getElementById('label-copy');
+                const icon = document.getElementById('icon-copy');
+                label.textContent = "কপি হয়েছে ✓";
+                label.className = "text-[11px] font-bold text-emerald-400";
+                icon.className = "fa-solid fa-check text-lg text-emerald-400";
+
+                setTimeout(() => {
+                    label.textContent = "কপি করুন";
+                    label.className = "text-[11px] font-bold text-gray-300";
+                    icon.className = "fa-regular fa-copy text-lg text-gray-300";
+                }, 2000);
+            }).catch(() => {
+                alert('Text copied to clipboard!');
+            });
+        }
+
+        function shareMainContent() {
+            if (!currentPost) return;
+            const shareUrl = window.location.href;
+
+            let shareTitle = "ShayariVerse Post";
+            if (currentPost.type === 'lyrics') {
+                shareTitle = `Lyrics: ${currentPost.songName || ''}`;
+            }
+
+            if (navigator.share) {
+                navigator.share({
+                    title: shareTitle,
+                    text: currentPost.text ? `"${currentPost.text.substring(0, 80)}..."` : 'Check this out on ShayariVerse!',
+                    url: shareUrl
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('লিংক কপি হয়েছে');
+                });
+            }
+        }
+
+        // Header Back Behavior
+        function handleHeaderBack() {
+            if (document.referrer && document.referrer.includes(window.location.host)) {
+                window.history.back();
+            } else {
+                window.location.href = "home.html";
+            }
+        }
+
+        // =============================================================
+        // 12. HELPER UTILITIES
+        // =============================================================
+        function renderErrorState(msg) {
+            document.getElementById('skeleton-loader').classList.add('hidden');
+            const container = document.getElementById('status-container');
+            container.innerHTML = `
+                <div class="glass-card rounded-3xl p-8 text-center border border-red-500/20 my-8">
+                    <i class="fa-solid fa-triangle-exclamation text-red-400 text-4xl mb-3"></i>
+                    <h3 class="text-base font-bold text-white mb-2">${msg || 'Content পাওয়া যায়নি।'}</h3>
+                    <p class="text-xs text-gray-400 mb-6">The content might be removed or is currently unavailable.</p>
+                    <a href="home.html" class="btn-gradient px-6 py-2.5 rounded-xl text-white font-bold text-xs inline-block shadow">
+                        Go Home
+                    </a>
+                </div>
+            `;
+        }
+
+        function formatTimestamp(ts) {
+            if (!ts) return '--';
+            const date = new Date(ts);
+            return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function getLanguageFontClass(lang) {
+            if (lang === 'Bangla') return 'font-bangla';
+            if (lang === 'Hindi') return 'font-hindi';
+            return 'font-sans';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
