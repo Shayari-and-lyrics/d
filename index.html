@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ShayariVerse - Shayari • Lyrics • Emotions</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tiro+Bangla&family=Hind:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            500: '#ec4899',
+                            600: '#db2777',
+                             dark: '#090d16',
+                            card: '#111827',
+                            border: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        bangla: ['Tiro Bangla', 'serif'],
+                        hindi: ['Hind', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase Compat SDKs (Auth & Realtime Database ONLY) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* Mobile-First Custom Styling & Adjustments */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #070913;
+            color: #f3f4f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 80px; /* Clearance for mobile bottom navbar */
+        }
+
+        .glass-header {
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-bottom-bar {
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        }
+
+        .btn-gradient:active {
+            transform: scale(0.97);
+        }
+
+        /* Hide scrollbars for horizontal chip scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .line-clamp-4 {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col selection:bg-pink-500 selection:text-white">
+
+    <!-- TOP NAVBAR (STICKY) -->
+    <header class="glass-header fixed top-0 left-0 right-0 z-40 h-16 transition-all duration-200">
+        <div class="max-w-4xl mx-auto h-full px-4 flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <a href="index.html" class="flex items-center gap-2.5 active:opacity-80 transition-opacity">
+                <div class="w-9 h-9 rounded-xl btn-gradient flex items-center justify-center text-white font-bold text-base shadow-md shadow-pink-500/20">
+                    <i class="fa-solid fa-heart text-sm"></i>
+                </div>
+                <div>
+                    <span class="text-lg font-black tracking-tight text-white block leading-none">
+                        Shayari<span class="text-gradient">Verse</span>
+                    </span>
+                    <span class="text-[9px] text-pink-400 font-medium tracking-wider uppercase block mt-0.5">
+                        Shayari • Lyrics • Emotions
+                    </span>
+                </div>
+            </a>
+
+            <!-- Right Actions (Search & Auth/Profile) -->
+            <div class="flex items-center gap-2">
+                <a href="search.html" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-800/60 active:bg-gray-800 transition-colors" aria-label="Search">
+                    <i class="fa-solid fa-magnifying-glass text-base"></i>
+                </a>
+
+                <!-- Desktop Nav Links -->
+                <nav class="hidden md:flex items-center gap-6 ml-4 mr-2">
+                    <a href="index.html" class="text-sm font-semibold text-pink-400">Home</a>
+                    <a href="search.html?type=Shayari" class="text-sm font-semibold text-gray-300 hover:text-pink-400 transition-colors">Shayari</a>
+                    <a href="search.html?type=Lyrics" class="text-sm font-semibold text-gray-300 hover:text-pink-400 transition-colors">Lyrics</a>
+                </nav>
+
+                <!-- Dynamic Auth Button -->
+                <div id="nav-auth-container" class="flex items-center gap-2">
+                    <a href="login.html" class="px-3.5 py-1.5 rounded-lg border border-pink-500/30 text-pink-300 font-semibold text-xs hover:bg-pink-500/10 active:scale-95 transition-all">
+                        Login
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="pt-20 px-3 sm:px-4 max-w-2xl mx-auto w-full flex-grow">
+
+        <!-- WELCOME HERO BANNER -->
+        <section class="glass-card rounded-2xl p-4 sm:p-6 mb-6 relative overflow-hidden border border-pink-500/20">
+            <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="flex items-center gap-2 mb-2">
+                <span class="px-2 py-0.5 rounded-full bg-pink-500/10 border border-pink-500/20 text-[10px] font-bold text-pink-400 tracking-wider uppercase">
+                    Community Platform
+                </span>
+                <span class="text-[10px] text-gray-400 font-medium">বাংলা • हिंदी • Banglish • Hindilish</span>
+            </div>
+
+            <h1 class="text-xl sm:text-2xl font-extrabold text-white leading-snug">
+                Your Words. Your Feelings. <span class="text-gradient">Your Story.</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-gray-400 mt-1.5 leading-relaxed">
+                Discover authentic Shayari &amp; Lyrics written directly by poets and heart-felt creators.
+            </p>
+
+            <div class="flex items-center gap-3 mt-4">
+                <a href="search.html" class="flex-1 py-2.5 px-4 rounded-xl glass-card text-center text-xs font-semibold text-gray-200 hover:border-pink-500/40 active:bg-gray-800 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-compass text-pink-400"></i> Explore All
+                </a>
+                <a id="hero-create-btn" href="register.html" class="flex-1 py-2.5 px-4 rounded-xl btn-gradient text-center text-xs font-bold text-white shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-pen-nib"></i> Create Post
+                </a>
+            </div>
+        </section>
+
+        <!-- CATEGORIES QUICK FILTER CHIPS -->
+        <section class="mb-6">
+            <div class="flex items-center justify-between mb-2.5">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Popular Moods</h3>
+                <a href="search.html" class="text-xs text-pink-400 hover:underline font-semibold">View All</a>
+            </div>
+
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 -mx-3 px-3">
+                <a href="search.html?cat=Love" class="px-3.5 py-2 rounded-xl glass-card text-xs font-semibold text-gray-200 hover:text-pink-400 whitespace-nowrap flex items-center gap-1.5 border border-gray-800 active:scale-95 transition-all">
+                    ❤️ Love
+                </a>
+                <a href="search.html?cat=Sad" class="px-3.5 py-2 rounded-xl glass-card text-xs font-semibold text-gray-200 hover:text-pink-400 whitespace-nowrap flex items-center gap-1.5 border border-gray-800 active:scale-95 transition-all">
+                    🥺 Sad
+                </a>
+                <a href="search.html?cat=Romantic" class="px-3.5 py-2 rounded-xl glass-card text-xs font-semibold text-gray-200 hover:text-pink-400 whitespace-nowrap flex items-center gap-1.5 border border-gray-800 active:scale-95 transition-all">
+                    🌹 Romantic
+                </a>
+                <a href="search.html?cat=Attitude" class="px-3.5 py-2 rounded-xl glass-card text-xs font-semibold text-gray-200 hover:text-pink-400 whitespace-nowrap flex items-center gap-1.5 border border-gray-800 active:scale-95 transition-all">
+                    🔥 Attitude
+                </a>
+                <a href="search.html?cat=Breakup" class="px-3.5 py-2 rounded-xl glass-card text-xs font-semibold text-gray-200 hover:text-pink-400 whitespace-nowrap flex items-center gap-1.5 border border-gray-800 active:scale-95 transition-all">
+                    💔 Breakup
+                </a>
+                <a href="search.html?cat=Motivation" class="px-3.5 py-2 rounded-xl glass-card text-xs font-semibold text-gray-200 hover:text-pink-400 whitespace-nowrap flex items-center gap-1.5 border border-gray-800 active:scale-95 transition-all">
+                    ⚡ Motivation
+                </a>
+            </div>
+        </section>
+
+        <!-- TOP CONTENT / TRENDING FEED SECTION -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between border-b border-gray-800/80 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-pink-500 animate-pulse"></span>
+                    <h2 class="text-base sm:text-lg font-extrabold text-white tracking-tight flex items-center gap-1.5">
+                        Trending Now 🔥
+                    </h2>
+                </div>
+                <span class="text-[11px] text-gray-400 font-medium">Top Community Posts</span>
+            </div>
+
+            <!-- FEED CONTAINER (DYNAMIC REALTIME DB CONTENT ONLY) -->
+            <div id="trending-feed-container" class="space-y-4">
+                
+                <!-- Loading Skeleton Loader State -->
+                <div id="feed-loader" class="glass-card rounded-2xl p-5 space-y-4 animate-pulse">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-800"></div>
+                        <div class="space-y-1.5 flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-1/3"></div>
+                            <div class="h-2.5 bg-gray-800/60 rounded w-1/4"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 py-2">
+                        <div class="h-3 bg-gray-800 rounded w-full"></div>
+                        <div class="h-3 bg-gray-800 rounded w-4/5"></div>
+                        <div class="h-3 bg-gray-800 rounded w-2/3"></div>
+                    </div>
+                    <div class="flex justify-between pt-2 border-t border-gray-800">
+                        <div class="h-4 bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-800 rounded w-12"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="glass-bottom-bar fixed bottom-0 left-0 right-0 z-50 h-16 px-4 max-w-md mx-auto md:max-w-lg rounded-t-2xl sm:rounded-t-none">
+        <div class="grid grid-cols-4 h-full items-center">
+            
+            <!-- Home (Active) -->
+            <a href="index.html" class="flex flex-col items-center justify-center gap-1 text-pink-400 font-bold transition-all">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] tracking-tight">Home</span>
+            </a>
+
+            <!-- Explore / Search -->
+            <a href="search.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200 transition-all">
+                <i class="fa-solid fa-compass text-lg"></i>
+                <span class="text-[10px] tracking-tight">Explore</span>
+            </a>
+
+            <!-- Create Button -->
+            <a id="bottom-create-btn" href="register.html" class="flex flex-col items-center justify-center">
+                <div class="w-11 h-11 rounded-full btn-gradient flex items-center justify-center text-white shadow-lg shadow-pink-500/30 -mt-5 border-2 border-gray-950 active:scale-95 transition-all">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                </div>
+                <span class="text-[10px] text-gray-400 tracking-tight mt-0.5">Create</span>
+            </a>
+
+            <!-- Profile / Account -->
+            <a id="bottom-profile-btn" href="login.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200 transition-all">
+                <i id="bottom-profile-icon" class="fa-solid fa-user text-lg"></i>
+                <span id="bottom-profile-label" class="text-[10px] tracking-tight">Account</span>
+            </a>
+
+        </div>
+    </nav>
+
+    <!-- FOOTER -->
+    <footer class="mt-16 py-8 border-t border-gray-900 bg-gray-950/80 text-center text-xs text-gray-500">
+        <div class="max-w-xl mx-auto px-4 space-y-4">
+            <div class="flex items-center justify-center gap-2">
+                <div class="w-6 h-6 rounded-lg btn-gradient flex items-center justify-center text-white text-xs font-bold">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <span class="text-sm font-extrabold text-white">Shayari<span class="text-gradient">Verse</span></span>
+            </div>
+            <p class="text-[11px] text-gray-400">"Words • Feelings • Stories"</p>
+            
+            <div class="flex flex-wrap justify-center gap-4 text-xs font-medium text-gray-400">
+                <a href="index.html" class="hover:text-pink-400">Home</a>
+                <a href="search.html?type=Shayari" class="hover:text-pink-400">Shayari</a>
+                <a href="search.html?type=Lyrics" class="hover:text-pink-400">Lyrics</a>
+                <a href="search.html" class="hover:text-pink-400">Search</a>
+                <a href="login.html" class="hover:text-pink-400">Login</a>
+                <a href="register.html" class="hover:text-pink-400">Register</a>
+            </div>
+
+            <p class="text-[10px] text-gray-600 pt-2 border-t border-gray-900">
+                &copy; <span id="year-span"></span> ShayariVerse. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC & FIREBASE INTEGRATION -->
+    <script>
+        // =============================================================
+        // 1. FIREBASE CONFIGURATION & INITIALIZATION
+        // =============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFPd0umYUjpFBH08GNhpvjPA00kTh6Y5c",
+            authDomain: "unlimited-73d64.firebaseapp.com",
+            databaseURL: "https://unlimited-73d64-default-rtdb.firebaseio.com",
+            projectId: "unlimited-73d64",
+            storageBucket: "unlimited-73d64.firebasestorage.app",
+            messagingSenderId: "1089467648940",
+            appId: "1:1089467648940:web:2886be4ec3148bee08c809"
+        };
+
+        let app, auth, db;
+        let currentUser = null;
+
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.app();
+                }
+                auth = firebase.auth();
+                db = firebase.database();
+            }
+        } catch (e) {
+            console.warn("Firebase Init Handling:", e.message);
+        }
+
+        // =============================================================
+        // 2. STATE & UI ELEMENTS
+        // =============================================================
+        const feedContainer = document.getElementById('trending-feed-container');
+        const feedLoader = document.getElementById('feed-loader');
+        const heroCreateBtn = document.getElementById('hero-create-btn');
+        const bottomCreateBtn = document.getElementById('bottom-create-btn');
+        const bottomProfileBtn = document.getElementById('bottom-profile-btn');
+        const bottomProfileIcon = document.getElementById('bottom-profile-icon');
+        const bottomProfileLabel = document.getElementById('bottom-profile-label');
+        const navAuthContainer = document.getElementById('nav-auth-container');
+
+        document.getElementById('year-span').textContent = new Date().getFullYear();
+
+        // =============================================================
+        // 3. AUTH STATE LISTENER & NAV UPDATES
+        // =============================================================
+        if (auth) {
+            auth.onAuthStateChanged((user) => {
+                currentUser = user;
+                if (user) {
+                    // Logged In: Update Create links
+                    heroCreateBtn.href = "create.html";
+                    bottomCreateBtn.href = "create.html";
+                    
+                    // Update Profile Nav Link
+                    bottomProfileBtn.href = "profile.html";
+                    bottomProfileIcon.className = "fa-solid fa-circle-user text-lg text-pink-400";
+                    bottomProfileLabel.textContent = "Profile";
+
+                    // Update Top Nav
+                    navAuthContainer.innerHTML = `
+                        <a href="profile.html" class="w-8 h-8 rounded-full btn-gradient flex items-center justify-center text-white text-xs font-bold shadow">
+                            <i class="fa-solid fa-user"></i>
+                        </a>
+                    `;
+                } else {
+                    // Logged Out
+                    heroCreateBtn.href = "register.html";
+                    bottomCreateBtn.href = "register.html";
+
+                    bottomProfileBtn.href = "login.html";
+                    bottomProfileIcon.className = "fa-solid fa-user text-lg";
+                    bottomProfileLabel.textContent = "Account";
+
+                    navAuthContainer.innerHTML = `
+                        <a href="login.html" class="px-3 py-1.5 rounded-lg border border-pink-500/30 text-pink-300 font-semibold text-xs hover:bg-pink-500/10 active:scale-95 transition-all">
+                            Login
+                        </a>
+                    `;
+                }
+
+                // Refresh Love reaction buttons for current user state
+                loadTrendingContent();
+            });
+        } else {
+            // Fallback load if Firebase script fails to load
+            loadTrendingContent();
+        }
+
+        // =============================================================
+        // 4. FETCH & RANK TRENDING CONTENT (REAL DATA ONLY)
+        // =============================================================
+        function loadTrendingContent() {
+            if (!db) {
+                renderEmptyState("Database connection unavailable.");
+                return;
+            }
+
+            const contentRef = db.ref('content');
+
+            // Query content node
+            contentRef.once('value').then((snapshot) => {
+                if (!snapshot.exists()) {
+                    renderEmptyState();
+                    return;
+                }
+
+                const rawData = snapshot.val();
+                const publishedList = [];
+
+                // Filter ONLY published status
+                Object.keys(rawData).forEach((key) => {
+                    const item = rawData[key];
+                    if (item && item.status === 'published') {
+                        // Ensure ID is attached
+                        item.contentId = item.contentId || key;
+                        
+                        // Calculate Ranking Score
+                        const loves = item.loveCount || 0;
+                        const views = item.views || 0;
+                        const comments = item.commentCount || 0;
+                        const timeScore = (item.publishedAt || item.createdAt || 0) / 10000000000;
+                        
+                        // Formula: Love (Weight 3) + Views (Weight 1) + Comments (Weight 2) + Recency
+                        item._score = (loves * 3) + (views * 1) + (comments * 2) + timeScore;
+                        
+                        publishedList.push(item);
+                    }
+                });
+
+                if (publishedList.length === 0) {
+                    renderEmptyState();
+                    return;
+                }
+
+                // Sort descending by calculated score
+                publishedList.sort((a, b) => b._score - a._score);
+
+                // Take TOP 10 max
+                const top10 = publishedList.slice(0, 10);
+
+                // Render Top 10 Feed
+                renderFeed(top10);
+
+            }).catch((err) => {
+                console.error("Error fetching content:", err);
+                renderEmptyState();
+            });
+        }
+
+        // =============================================================
+        // 5. RENDER CONTENT CARDS
+        // =============================================================
+        function renderFeed(posts) {
+            feedContainer.innerHTML = '';
+
+            posts.forEach((post) => {
+                const card = document.createElement('article');
+                card.className = 'glass-card rounded-2xl p-4 sm:p-5 transition-all duration-200 border border-gray-800/80 hover:border-pink-500/30';
+                
+                const isLyrics = post.type === 'Lyrics';
+                const langFontClass = getLanguageFontClass(post.language);
+                const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName || 'User')}&background=ec4899&color=fff&size=80`;
+                const avatarUrl = post.authorProfilePic || defaultAvatar;
+
+                card.innerHTML = `
+                    <!-- Author Header -->
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <img src="${avatarUrl}" loading="lazy" alt="Profile" class="w-9 h-9 rounded-full object-cover border border-pink-500/40">
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-white leading-tight">
+                                    ${escapeHtml(post.authorName || 'Anonymous Poet')}
+                                </h4>
+                                <p class="text-[10px] text-gray-400 font-medium">
+                                    @${escapeHtml(post.authorUsername || 'user')}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Type & Language Badges -->
+                        <div class="flex items-center gap-1.5">
+                            <span class="px-2 py-0.5 rounded-md ${isLyrics ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-pink-500/10 text-pink-400 border-pink-500/20'} border text-[10px] font-bold uppercase">
+                                ${escapeHtml(post.type || 'Shayari')}
+                            </span>
+                            <span class="px-2 py-0.5 rounded-md bg-gray-800 text-gray-300 text-[10px] font-semibold">
+                                ${escapeHtml(post.language || 'Bangla')}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Lyrics Music Info (If type === Lyrics) -->
+                    ${isLyrics ? `
+                        <div class="mb-3 px-3 py-2 rounded-xl bg-purple-950/30 border border-purple-500/20 flex items-center justify-between text-xs">
+                            <div class="truncate">
+                                <span class="text-purple-300 font-bold"><i class="fa-solid fa-music mr-1"></i> ${escapeHtml(post.songName || 'Untitled Song')}</span>
+                            </div>
+                            <div class="text-gray-400 text-[11px] truncate ml-2">
+                                <i class="fa-solid fa-user-pen mr-1"></i> ${escapeHtml(post.artistName || 'Unknown Singer')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Content Text Body -->
+                    <div class="my-3">
+                        <p class="text-sm sm:text-base text-gray-200 leading-relaxed font-normal whitespace-pre-line line-clamp-4 ${langFontClass}">
+                            ${escapeHtml(post.text || '')}
+                        </p>
+                    </div>
+
+                    <!-- Card Actions Bar -->
+                    <div class="pt-3 mt-2 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                        <div class="flex items-center gap-4">
+                            <!-- Love Button -->
+                            <button onclick="toggleLove('${post.contentId}')" id="love-btn-${post.contentId}" class="flex items-center gap-1.5 hover:text-pink-500 transition-colors active:scale-90">
+                                <i id="love-icon-${post.contentId}" class="fa-regular fa-heart text-base"></i>
+                                <span id="love-count-${post.contentId}" class="font-semibold text-xs">${post.loveCount || 0}</span>
+                            </button>
+
+                            <!-- Comment Count -->
+                            <a href="details.html?id=${post.contentId}" class="flex items-center gap-1.5 hover:text-purple-400 transition-colors">
+                                <i class="fa-regular fa-comment text-base"></i>
+                                <span class="font-semibold text-xs">${post.commentCount || 0}</span>
+                            </a>
+
+                            <!-- Views Count -->
+                            <div class="flex items-center gap-1 text-gray-500">
+                                <i class="fa-regular fa-eye text-xs"></i>
+                                <span class="text-[11px] font-medium">${post.views || 0}</span>
+                            </div>
+                        </div>
+
+                        <!-- Share & View Full Links -->
+                        <div class="flex items-center gap-3">
+                            <button onclick="shareContent('${post.contentId}', '${escapeJsString(post.text)}')" class="p-1.5 hover:text-white transition-colors" title="Share">
+                                <i class="fa-solid fa-share-nodes text-sm"></i>
+                            </button>
+                            <a href="details.html?id=${post.contentId}" class="text-xs font-bold text-pink-400 hover:text-pink-300 transition-colors flex items-center gap-1">
+                                View Full <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                feedContainer.appendChild(card);
+
+                // Increment View count Safely (Session throttled)
+                registerView(post.contentId);
+
+                // Check Love Status if user is logged in
+                checkUserLoveStatus(post.contentId);
+            });
+        }
+
+        // =============================================================
+        // 6. EMPTY STATE RENDERER
+        // =============================================================
+        function renderEmptyState(message) {
+            feedContainer.innerHTML = `
+                <div class="glass-card rounded-2xl p-8 text-center border border-gray-800">
+                    <div class="w-16 h-16 rounded-2xl bg-pink-500/10 text-pink-400 flex items-center justify-center text-2xl mx-auto mb-4">
+                        <i class="fa-solid fa-pen-fancy"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-1">
+                        Nothing trending yet.
+                    </h3>
+                    <p class="text-xs text-gray-400 max-w-xs mx-auto mb-6">
+                        ${message || 'Be the first to publish your Shayari or Lyrics to inspire the community!'}
+                    </p>
+                    <a href="${currentUser ? 'create.html' : 'register.html'}" class="inline-flex items-center gap-2 btn-gradient px-6 py-2.5 rounded-xl text-white font-bold text-xs shadow-lg shadow-pink-500/20 active:scale-95 transition-all">
+                        <i class="fa-solid fa-plus"></i> Create Now
+                    </a>
+                </div>
+            `;
+        }
+
+        // =============================================================
+        // 7. REALTIME LOVE / LIKE TOGGLE SYSTEM
+        // =============================================================
+        function checkUserLoveStatus(contentId) {
+            if (!currentUser || !db) return;
+
+            const reactionRef = db.ref(`reactions/${contentId}/${currentUser.uid}`);
+            reactionRef.on('value', (snapshot) => {
+                const icon = document.getElementById(`love-icon-${contentId}`);
+                const btn = document.getElementById(`love-btn-${contentId}`);
+                
+                if (snapshot.exists() && snapshot.val()) {
+                    if (icon) icon.className = "fa-solid fa-heart text-base text-pink-500 animate-bounce";
+                    if (btn) btn.classList.add('text-pink-500');
+                } else {
+                    if (icon) icon.className = "fa-regular fa-heart text-base";
+                    if (btn) btn.classList.remove('text-pink-500');
+                }
+            });
+        }
+
+        function toggleLove(contentId) {
+            if (!currentUser) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!db) return;
+
+            const reactionRef = db.ref(`reactions/${contentId}/${currentUser.uid}`);
+            const contentLoveRef = db.ref(`content/${contentId}/loveCount`);
+
+            reactionRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    // Remove reaction
+                    reactionRef.remove();
+                    contentLoveRef.transaction(count => Math.max(0, (count || 1) - 1));
+                } else {
+                    // Add reaction
+                    reactionRef.set(true);
+                    contentLoveRef.transaction(count => (count || 0) + 1);
+                }
+            });
+        }
+
+        // =============================================================
+        // 8. VIEW COUNTER (Session Throttled)
+        // =============================================================
+        function registerView(contentId) {
+            if (!db) return;
+
+            const sessionKey = `viewed_${contentId}`;
+            if (sessionStorage.getItem(sessionKey)) return;
+
+            // Mark session
+            sessionStorage.setItem(sessionKey, 'true');
+
+            // Increment view count in database
+            const viewsRef = db.ref(`content/${contentId}/views`);
+            viewsRef.transaction(currentViews => (currentViews || 0) + 1);
+        }
+
+        // =============================================================
+        // 9. NATIVE SHARE API & FALLBACK
+        // =============================================================
+        function shareContent(contentId, textExcerpt) {
+            const shareUrl = `${window.location.origin}/details.html?id=${contentId}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'ShayariVerse',
+                    text: textExcerpt ? `"${textExcerpt.substring(0, 80)}..."` : 'Check out this post on ShayariVerse!',
+                    url: shareUrl
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('Link copied to clipboard!');
+                }).catch(() => {
+                    alert(`Share URL: ${shareUrl}`);
+                });
+            }
+        }
+
+        // =============================================================
+        // 10. HELPER FUNCTIONS
+        // =============================================================
+        function getLanguageFontClass(lang) {
+            if (lang === 'Bangla') return 'font-bangla';
+            if (lang === 'Hindi') return 'font-hindi';
+            return 'font-sans';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escapeJsString(str) {
+            if (!str) return '';
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+        }
+    </script>
+</body>
+</html>
