@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Search - ShayariVerse</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tiro+Bangla&family=Hind:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fdf2f8',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            dark: '#070913',
+                            card: '#111827',
+                            border: 'rgba(255, 255, 255, 0.08)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        bangla: ['Tiro Bangla', 'serif'],
+                        hindi: ['Hind', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Firebase Compat SDKs (Auth & Realtime Database ONLY) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #070913;
+            color: #f3f4f6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            padding-bottom: 90px; /* Space for bottom navbar */
+        }
+
+        .glass-header {
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-nav {
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        }
+
+        .btn-gradient:active {
+            transform: scale(0.97);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col selection:bg-pink-500 selection:text-white">
+
+    <!-- TOP STICKY HEADER -->
+    <header class="glass-header fixed top-0 left-0 right-0 z-40 h-16 transition-all duration-200">
+        <div class="max-w-2xl mx-auto h-full px-4 flex items-center justify-between">
+            
+            <!-- Back Button -->
+            <a href="home.html" class="w-9 h-9 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-800/60 active:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-arrow-left text-base"></i>
+            </a>
+
+            <!-- Header Title -->
+            <h1 class="text-base font-extrabold text-white tracking-tight">
+                খুঁজুন (Search)
+            </h1>
+
+            <!-- Create CTA -->
+            <a id="header-create-btn" href="register.html" class="text-xs font-bold text-pink-400 hover:text-pink-300 transition-colors">
+                ✍️ Create
+            </a>
+
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="pt-20 px-3 sm:px-4 max-w-2xl mx-auto w-full flex-grow">
+
+        <!-- SEARCH INPUT BOX -->
+        <section class="mb-4">
+            <div class="relative flex items-center gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="search-input" placeholder="Search username, Shayari or Lyrics..." oninput="handleInputThrottled()" onkeydown="handleKeyDown(event)" class="w-full bg-gray-900 border border-gray-800 rounded-2xl pl-11 pr-10 py-3.5 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all font-medium shadow-lg">
+                    
+                    <!-- Clear Input Cross Button -->
+                    <button type="button" id="clear-search-btn" onclick="clearSearchInput()" class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-800 text-gray-400 hover:text-white text-[10px] flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Explicit Search Button -->
+                <button onclick="triggerSearch()" class="btn-gradient px-4 py-3.5 rounded-2xl text-white font-bold text-xs shadow-md active:scale-95 transition-all">
+                    Search
+                </button>
+            </div>
+        </section>
+
+        <!-- SEARCH TABS: USERS / SHAYARI / LYRICS -->
+        <section class="mb-4">
+            <div class="grid grid-cols-3 gap-1.5 p-1 bg-gray-900/90 rounded-2xl border border-gray-800 text-center text-xs font-semibold">
+                <button onclick="switchSearchTab('users')" id="tab-btn-users" class="search-tab-btn py-2.5 rounded-xl bg-pink-500 text-white transition-all shadow">
+                    👤 ব্যবহারকারী
+                </button>
+                <button onclick="switchSearchTab('shayari')" id="tab-btn-shayari" class="search-tab-btn py-2.5 rounded-xl text-gray-400 hover:text-white transition-all">
+                    📜 Shayari
+                </button>
+                <button onclick="switchSearchTab('lyrics')" id="tab-btn-lyrics" class="search-tab-btn py-2.5 rounded-xl text-gray-400 hover:text-white transition-all">
+                    🎵 Lyrics
+                </button>
+            </div>
+        </section>
+
+        <!-- CONTENT EXTRA FILTERS BAR (VISIBLE ONLY ON SHAYARI OR LYRICS TAB) -->
+        <section id="content-filters-bar" class="hidden space-y-2.5 mb-5">
+            
+            <!-- Language Pills -->
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px] font-medium py-1">
+                <span class="text-gray-500 text-[10px] font-bold uppercase shrink-0">Language:</span>
+                <button onclick="setSearchLangFilter('all')" id="s-lang-all" class="s-lang-btn px-3 py-1 rounded-lg bg-pink-500/20 text-pink-300 border border-pink-500/40 whitespace-nowrap">
+                    সব
+                </button>
+                <button onclick="setSearchLangFilter('Bangla')" id="s-lang-Bangla" class="s-lang-btn px-3 py-1 rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap">
+                    বাংলা
+                </button>
+                <button onclick="setSearchLangFilter('Hindi')" id="s-lang-Hindi" class="s-lang-btn px-3 py-1 rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap">
+                    हिंदी
+                </button>
+                <button onclick="setSearchLangFilter('Banglish')" id="s-lang-Banglish" class="s-lang-btn px-3 py-1 rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap">
+                    Banglish
+                </button>
+                <button onclick="setSearchLangFilter('Hindilish')" id="s-lang-Hindilish" class="s-lang-btn px-3 py-1 rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap">
+                    Hindilish
+                </button>
+            </div>
+
+            <!-- Sort Toggle Bar -->
+            <div class="flex items-center justify-between text-xs pt-1 border-t border-gray-800/80">
+                <span id="results-count-badge" class="text-[10px] font-bold text-gray-400">0 Results</span>
+                <div class="flex items-center gap-2 text-[11px] font-semibold">
+                    <button onclick="setSearchSortOrder('popular')" id="sort-btn-popular" class="text-pink-400">🔥 Popular</button>
+                    <span class="text-gray-700">|</span>
+                    <button onclick="setSearchSortOrder('latest')" id="sort-btn-latest" class="text-gray-400 hover:text-white">🆕 Latest</button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RECENT SEARCHES SECTION (SHOWN BEFORE SEARCHING) -->
+        <section id="recent-searches-section" class="mb-6">
+            <div class="flex items-center justify-between mb-2.5 px-1">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">
+                    <i class="fa-solid fa-clock-rotate-left mr-1.5 text-pink-400"></i> সাম্প্রতিক Search
+                </h3>
+                <button onclick="clearRecentSearches()" class="text-[11px] text-pink-400 hover:underline font-semibold">
+                    সব মুছে ফেলুন
+                </button>
+            </div>
+            
+            <div id="recent-searches-chips" class="flex flex-wrap gap-2">
+                <!-- Chips injected via JS -->
+            </div>
+        </section>
+
+        <!-- SEARCH RESULTS CONTAINER -->
+        <section id="search-results-section">
+            
+            <!-- Default Welcome State (When input is empty & no search done) -->
+            <div id="initial-empty-state" class="glass-card rounded-2xl p-8 text-center border border-gray-800 my-4">
+                <div class="w-16 h-16 rounded-2xl bg-pink-500/10 text-pink-400 flex items-center justify-center text-2xl mx-auto mb-3">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <h3 class="text-base font-bold text-white mb-1">কি খুঁজছেন?</h3>
+                <p class="text-xs text-gray-400 max-w-xs mx-auto leading-relaxed">
+                    Username, Shayari অথবা Lyrics দিয়ে খুঁজুন।
+                </p>
+            </div>
+
+            <!-- Skeleton Loader -->
+            <div id="search-skeleton" class="hidden space-y-3">
+                <div class="glass-card rounded-2xl p-4 animate-pulse space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-800"></div>
+                        <div class="space-y-1.5 flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-1/3"></div>
+                            <div class="h-2.5 bg-gray-800/60 rounded w-1/4"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-4 animate-pulse space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-800"></div>
+                        <div class="space-y-1.5 flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-1/3"></div>
+                            <div class="h-2.5 bg-gray-800/60 rounded w-1/4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS LIST -->
+            <div id="results-feed" class="space-y-3.5">
+                <!-- Results rendered dynamically -->
+            </div>
+
+            <!-- LOAD MORE BUTTON -->
+            <div id="load-more-container" class="hidden text-center mt-6">
+                <button onclick="handleLoadMoreResults()" class="px-6 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-xs font-bold text-gray-200 border border-gray-800 active:scale-95 transition-all">
+                    <i class="fa-solid fa-arrows-rotate mr-1.5 text-pink-400"></i> আরও দেখুন (Load More)
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="glass-nav fixed bottom-0 left-0 right-0 z-50 h-16 px-4 max-w-md mx-auto md:max-w-lg rounded-t-2xl sm:rounded-t-none">
+        <div class="grid grid-cols-5 h-full items-center text-center">
+            
+            <!-- 1. Home -->
+            <a href="home.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[9px] tracking-tight">Home</span>
+            </a>
+
+            <!-- 2. Search (Active) -->
+            <a href="search.html" class="flex flex-col items-center justify-center gap-1 text-pink-400 font-bold">
+                <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                <span class="text-[9px] tracking-tight">Search</span>
+            </a>
+
+            <!-- 3. Create Button -->
+            <a id="nav-create-btn" href="register.html" class="flex flex-col items-center justify-center">
+                <div class="w-11 h-11 rounded-full btn-gradient flex items-center justify-center text-white shadow-lg shadow-pink-500/30 -mt-5 border-2 border-gray-950 active:scale-95">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                </div>
+                <span class="text-[9px] text-gray-400 tracking-tight mt-0.5">Create</span>
+            </a>
+
+            <!-- 4. Favorites -->
+            <a href="favorites.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-bookmark text-lg"></i>
+                <span class="text-[9px] tracking-tight">Favorites</span>
+            </a>
+
+            <!-- 5. Profile -->
+            <a id="nav-profile-btn" href="login.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-200">
+                <i class="fa-solid fa-user text-lg"></i>
+                <span class="text-[9px] tracking-tight">Profile</span>
+            </a>
+
+        </div>
+    </nav>
+
+    <!-- JAVASCRIPT & FIREBASE REALTIME DB LOGIC -->
+    <script>
+        // =============================================================
+        // 1. FIREBASE CONFIGURATION & INITIALIZATION
+        // =============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFPd0umYUjpFBH08GNhpvjPA00kTh6Y5c",
+            authDomain: "unlimited-73d64.firebaseapp.com",
+            databaseURL: "https://unlimited-73d64-default-rtdb.firebaseio.com",
+            projectId: "unlimited-73d64",
+            storageBucket: "unlimited-73d64.firebasestorage.app",
+            messagingSenderId: "1089467648940",
+            appId: "1:1089467648940:web:2886be4ec3148bee08c809"
+        };
+
+        let app, auth, db;
+        let currentUser = null;
+
+        let activeTab = 'users'; // 'users' | 'shayari' | 'lyrics'
+        let currentSearchQuery = '';
+        let searchDebounceTimer = null;
+
+        // Content Filter & Sorting State
+        let selectedSearchLang = 'all';
+        let selectedSearchSort = 'popular';
+        let rawSearchResults = [];
+        let visibleLimit = 10;
+
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps.length) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.app();
+                }
+                auth = firebase.auth();
+                db = firebase.database();
+            }
+        } catch (e) {
+            console.warn("Firebase Init Handling:", e.message);
+        }
+
+        // =============================================================
+        // 2. AUTH STATE LISTENER & URL PARSER
+        // =============================================================
+        if (auth) {
+            auth.onAuthStateChanged((user) => {
+                currentUser = user;
+                const headerCreate = document.getElementById('header-create-btn');
+                const navCreate = document.getElementById('nav-create-btn');
+                const navProfile = document.getElementById('nav-profile-btn');
+
+                if (user) {
+                    if (headerCreate) headerCreate.href = "create.html";
+                    if (navCreate) navCreate.href = "create.html";
+                    if (navProfile) navProfile.href = "profile.html";
+                } else {
+                    if (headerCreate) headerCreate.href = "register.html";
+                    if (navCreate) navCreate.href = "register.html";
+                    if (navProfile) navProfile.href = "login.html";
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRecentSearches();
+
+            // Check URL Params: ?type=Shayari / ?type=Lyrics / ?q=query
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryType = urlParams.get('type');
+            const queryQ = urlParams.get('q');
+
+            if (queryType) {
+                if (queryType.toLowerCase() === 'shayari') switchSearchTab('shayari');
+                else if (queryType.toLowerCase() === 'lyrics') switchSearchTab('lyrics');
+            }
+
+            if (queryQ) {
+                document.getElementById('search-input').value = queryQ;
+                document.getElementById('clear-search-btn').classList.remove('hidden');
+                triggerSearch();
+            }
+        });
+
+        // =============================================================
+        // 3. SEARCH TABS & INPUT HANDLERS
+        // =============================================================
+        function switchSearchTab(tabName) {
+            activeTab = tabName;
+            visibleLimit = 10;
+
+            document.querySelectorAll('.search-tab-btn').forEach(btn => {
+                btn.className = "search-tab-btn py-2.5 rounded-xl text-gray-400 hover:text-white transition-all";
+            });
+
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            if (activeBtn) {
+                activeBtn.className = "search-tab-btn py-2.5 rounded-xl bg-pink-500 text-white transition-all shadow";
+            }
+
+            // Show/Hide Extra Content Filters Bar
+            const filtersBar = document.getElementById('content-filters-bar');
+            if (tabName === 'shayari' || tabName === 'lyrics') {
+                filtersBar.classList.remove('hidden');
+            } else {
+                filtersBar.classList.add('hidden');
+            }
+
+            if (currentSearchQuery) {
+                triggerSearch();
+            }
+        }
+
+        function handleInputThrottled() {
+            const val = document.getElementById('search-input').value;
+            const clearBtn = document.getElementById('clear-search-btn');
+
+            if (val) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                triggerSearch();
+            }, 400); // 400ms Debounce
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                triggerSearch();
+            }
+        }
+
+        function clearSearchInput() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            currentSearchQuery = '';
+            document.getElementById('results-feed').innerHTML = '';
+            document.getElementById('initial-empty-state').classList.remove('hidden');
+            document.getElementById('recent-searches-section').classList.remove('hidden');
+            document.getElementById('load-more-container').classList.add('hidden');
+        }
+
+        function triggerSearch() {
+            const rawVal = document.getElementById('search-input').value;
+            const query = rawVal.trim().toLowerCase().replace(/^@/, '');
+
+            currentSearchQuery = query;
+
+            if (!query) {
+                clearSearchInput();
+                return;
+            }
+
+            // Save to Recent Searches
+            addRecentSearch(query);
+
+            document.getElementById('initial-empty-state').classList.add('hidden');
+            document.getElementById('recent-searches-section').classList.add('hidden');
+            document.getElementById('search-skeleton').classList.remove('hidden');
+            document.getElementById('results-feed').innerHTML = '';
+
+            visibleLimit = 10;
+
+            if (activeTab === 'users') {
+                executeUserSearch(query);
+            } else {
+                executeContentSearch(query, activeTab);
+            }
+        }
+
+        // =============================================================
+        // 4. USER SEARCH LOGIC (INDEXED usernames/ LOOKUP)
+        // =============================================================
+        function executeUserSearch(normalizedQuery) {
+            if (!db) {
+                renderErrorState("Search করা যাচ্ছে না।");
+                return;
+            }
+
+            // Query usernames index where normalizedUsername starts with query
+            const usernamesRef = db.ref('usernames');
+
+            usernamesRef.orderByKey()
+                .startAt(normalizedQuery)
+                .endAt(normalizedQuery + "\uf8ff")
+                .limitToFirst(20)
+                .once('value')
+                .then((snapshot) => {
+                    document.getElementById('search-skeleton').classList.add('hidden');
+                    const resultsFeed = document.getElementById('results-feed');
+                    resultsFeed.innerHTML = '';
+
+                    if (!snapshot.exists()) {
+                        renderNoResultsState();
+                        return;
+                    }
+
+                    const usernameMap = snapshot.val();
+                    const uids = Object.values(usernameMap);
+
+                    // Fetch actual user profiles for UIDs
+                    const profilePromises = uids.map(uid => db.ref(`users/${uid}`).once('value'));
+
+                    Promise.all(profilePromises).then(profileSnapshots => {
+                        const matchedUsers = [];
+
+                        profileSnapshots.forEach(snap => {
+                            if (snap.exists()) {
+                                matchedUsers.push(snap.val());
+                            }
+                        });
+
+                        if (matchedUsers.length === 0) {
+                            renderNoResultsState();
+                            return;
+                        }
+
+                        renderUserResults(matchedUsers);
+                    });
+
+                }).catch((err) => {
+                    console.error("User Search Error:", err);
+                    renderErrorState();
+                });
+        }
+
+        function renderUserResults(users) {
+            const resultsFeed = document.getElementById('results-feed');
+            resultsFeed.innerHTML = '';
+
+            users.forEach(user => {
+                const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
+                const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=ec4899&color=fff`;
+                const avatar = user.profilePicture || defaultAvatar;
+
+                const card = document.createElement('div');
+                card.className = "glass-card p-4 rounded-2xl flex items-center justify-between border border-gray-800 hover:border-pink-500/30 transition-all";
+
+                card.innerHTML = `
+                    <a href="profile.html?uid=${user.uid}" class="flex items-center gap-3">
+                        <img src="${avatar}" loading="lazy" class="w-11 h-11 rounded-full object-cover border border-pink-500/40">
+                        <div>
+                            <h4 class="text-xs sm:text-sm font-bold text-white leading-tight">${escapeHtml(fullName)}</h4>
+                            <p class="text-[11px] text-pink-400 font-medium">@${escapeHtml(user.username || 'user')}</p>
+                            <div class="flex items-center gap-3 text-[10px] text-gray-400 mt-1">
+                                <span><strong>${user.followersCount || 0}</strong> Followers</span>
+                                <span><strong>${user.followingCount || 0}</strong> Following</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="profile.html?uid=${user.uid}" class="px-3.5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-pink-400 text-xs font-bold border border-gray-700 active:scale-95 transition-all">
+                        প্রোফাইল দেখুন
+                    </a>
+                `;
+
+                resultsFeed.appendChild(card);
+            });
+        }
+
+        // =============================================================
+        // 5. CONTENT SEARCH LOGIC (SHAYARI / LYRICS)
+        // =============================================================
+        function executeContentSearch(query, contentType) {
+            if (!db) {
+                renderErrorState();
+                return;
+            }
+
+            const contentRef = db.ref('content');
+
+            contentRef.once('value').then((snapshot) => {
+                document.getElementById('search-skeleton').classList.add('hidden');
+                
+                if (!snapshot.exists()) {
+                    renderNoResultsState();
+                    return;
+                }
+
+                const rawData = snapshot.val();
+                rawSearchResults = [];
+
+                Object.keys(rawData).forEach(key => {
+                    const item = rawData[key];
+
+                    // STRICT FILTER: status === 'published' & matching type
+                    if (item && item.status === 'published' && (item.type || '').toLowerCase() === contentType.toLowerCase()) {
+                        item.contentId = item.contentId || key;
+
+                        const text = (item.text || '').toLowerCase();
+                        const category = (item.category || '').toLowerCase();
+                        const language = (item.language || '').toLowerCase();
+                        const authorUser = (item.authorUsername || '').toLowerCase();
+                        const songName = (item.songName || '').toLowerCase();
+                        const artistName = (item.artistName || '').toLowerCase();
+
+                        // Search Match Logic
+                        const isMatch = text.includes(query) || 
+                                        category.includes(query) || 
+                                        language.includes(query) || 
+                                        authorUser.includes(query) || 
+                                        songName.includes(query) || 
+                                        artistName.includes(query);
+
+                        if (isMatch) {
+                            const loves = item.loveCount || 0;
+                            const views = item.views || 0;
+                            const comments = item.commentCount || 0;
+                            const publishedAt = item.publishedAt || item.createdAt || 0;
+                            const timeScore = publishedAt / 10000000000;
+
+                            item._score = (loves * 5) + (views * 1) + (comments * 3) + timeScore;
+                            rawSearchResults.push(item);
+                        }
+                    }
+                });
+
+                applyContentFiltersAndRender();
+
+            }).catch(err => {
+                console.error("Content Search Error:", err);
+                renderErrorState();
+            });
+        }
+
+        function applyContentFiltersAndRender() {
+            let filtered = [...rawSearchResults];
+
+            // Language Filter
+            if (selectedSearchLang !== 'all') {
+                filtered = filtered.filter(item => item.language === selectedSearchLang);
+            }
+
+            // Sort Order
+            if (selectedSearchSort === 'popular') {
+                filtered.sort((a, b) => b._score - a._score);
+            } else {
+                filtered.sort((a, b) => (b.publishedAt || b.createdAt || 0) - (a.publishedAt || a.createdAt || 0));
+            }
+
+            document.getElementById('results-count-badge').textContent = `${filtered.length} Results`;
+
+            if (filtered.length === 0) {
+                renderNoResultsState();
+                return;
+            }
+
+            renderContentCards(filtered);
+        }
+
+        function setSearchLangFilter(lang) {
+            selectedSearchLang = lang;
+            document.querySelectorAll('.s-lang-btn').forEach(btn => {
+                btn.className = "s-lang-btn px-3 py-1 rounded-lg bg-gray-900 text-gray-400 border border-gray-800 hover:text-white whitespace-nowrap";
+            });
+            const active = document.getElementById(`s-lang-${lang}`);
+            if (active) active.className = "s-lang-btn px-3 py-1 rounded-lg bg-pink-500/20 text-pink-300 border border-pink-500/40 whitespace-nowrap";
+
+            applyContentFiltersAndRender();
+        }
+
+        function setSearchSortOrder(order) {
+            selectedSearchSort = order;
+            document.getElementById('sort-btn-popular').className = order === 'popular' ? "text-pink-400 font-bold" : "text-gray-400 hover:text-white";
+            document.getElementById('sort-btn-latest').className = order === 'latest' ? "text-pink-400 font-bold" : "text-gray-400 hover:text-white";
+
+            applyContentFiltersAndRender();
+        }
+
+        function renderContentCards(posts) {
+            const feedContainer = document.getElementById('results-feed');
+            const loadMoreBtn = document.getElementById('load-more-container');
+            feedContainer.innerHTML = '';
+
+            const sliceToShow = posts.slice(0, visibleLimit);
+
+            sliceToShow.forEach(post => {
+                const isLyrics = post.type === 'Lyrics' || post.type === 'lyrics';
+                const authorName = `${post.authorFirstName || ''} ${post.authorLastName || ''}`.trim() || 'Poet';
+                const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=ec4899&color=fff`;
+                const avatar = post.authorProfilePicture || defaultAvatar;
+
+                const card = document.createElement('article');
+                card.className = "glass-card rounded-2xl p-4 sm:p-5 transition-all duration-200 border border-gray-800 hover:border-pink-500/30";
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <a href="profile.html?uid=${post.authorId}" class="flex items-center gap-2.5">
+                            <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-pink-500/40">
+                            <div>
+                                <h4 class="text-xs font-bold text-white leading-tight">${escapeHtml(authorName)}</h4>
+                                <p class="text-[10px] text-gray-400">@${escapeHtml(post.authorUsername || 'user')}</p>
+                            </div>
+                        </a>
+                        <div class="flex items-center gap-1.5">
+                            <span class="px-2 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20 text-[10px] font-bold uppercase">${escapeHtml(post.category || 'General')}</span>
+                            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300 text-[10px] font-semibold">${escapeHtml(post.language || 'Bangla')}</span>
+                        </div>
+                    </div>
+
+                    ${isLyrics ? `
+                        <div class="mb-2.5 p-2.5 rounded-xl bg-purple-950/30 border border-purple-500/20 flex items-center justify-between text-xs">
+                            <span class="text-purple-300 font-bold truncate"><i class="fa-solid fa-music mr-1"></i> ${escapeHtml(post.songName || '')}</span>
+                            <span class="text-gray-400 text-[11px] truncate ml-2"><i class="fa-solid fa-microphone mr-1"></i> ${escapeHtml(post.artistName || '')}</span>
+                        </div>
+                    ` : ''}
+
+                    <a href="details.html?id=${post.contentId}" class="block my-2">
+                        <p class="text-xs sm:text-sm text-gray-200 leading-relaxed line-clamp-3">${escapeHtml(post.text || '')}</p>
+                    </a>
+
+                    <div class="pt-3 mt-2 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleLoveReaction('${post.contentId}')" id="love-btn-${post.contentId}" class="flex items-center gap-1 hover:text-pink-500">
+                                <i id="love-icon-${post.contentId}" class="fa-regular fa-heart"></i>
+                                <span id="love-count-${post.contentId}">${post.loveCount || 0}</span>
+                            </button>
+                            <span><i class="fa-regular fa-comment mr-1"></i>${post.commentCount || 0}</span>
+                            <span><i class="fa-regular fa-eye mr-1"></i>${post.views || 0}</span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="sharePost('${post.contentId}', '${escapeJsString(post.text)}')" class="p-1 hover:text-white"><i class="fa-solid fa-share-nodes"></i></button>
+                            <a href="details.html?id=${post.contentId}" class="text-xs font-bold text-pink-400 hover:underline">View</a>
+                        </div>
+                    </div>
+                `;
+
+                feedContainer.appendChild(card);
+
+                // Sync Reaction State
+                checkUserLoveState(post.contentId);
+            });
+
+            if (posts.length > visibleLimit) {
+                loadMoreBtn.classList.remove('hidden');
+            } else {
+                loadMoreBtn.classList.add('hidden');
+            }
+        }
+
+        function handleLoadMoreResults() {
+            visibleLimit += 10;
+            applyContentFiltersAndRender();
+        }
+
+        // =============================================================
+        // 6. REALTIME LOVE REACTION TOGGLE
+        // =============================================================
+        function checkUserLoveState(contentId) {
+            if (!currentUser || !db) return;
+
+            const reactionRef = db.ref(`reactions/${contentId}/${currentUser.uid}`);
+            reactionRef.on('value', (snapshot) => {
+                const icon = document.getElementById(`love-icon-${contentId}`);
+                const btn = document.getElementById(`love-btn-${contentId}`);
+
+                if (snapshot.exists() && snapshot.val()) {
+                    if (icon) icon.className = "fa-solid fa-heart text-pink-500 animate-bounce";
+                    if (btn) btn.classList.add('text-pink-500');
+                } else {
+                    if (icon) icon.className = "fa-regular fa-heart";
+                    if (btn) btn.classList.remove('text-pink-500');
+                }
+            });
+        }
+
+        function toggleLoveReaction(contentId) {
+            if (!currentUser) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!db) return;
+
+            const reactionRef = db.ref(`reactions/${contentId}/${currentUser.uid}`);
+            const contentLoveRef = db.ref(`content/${contentId}/loveCount`);
+
+            reactionRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    reactionRef.remove();
+                    contentLoveRef.transaction(count => Math.max(0, (count || 1) - 1));
+                } else {
+                    reactionRef.set(true);
+                    contentLoveRef.transaction(count => (count || 0) + 1);
+                }
+            });
+        }
+
+        // Share Action
+        function sharePost(contentId, text) {
+            const shareUrl = `${window.location.origin}/details.html?id=${contentId}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'ShayariVerse Search',
+                    text: text ? `"${text.substring(0, 80)}..."` : 'Check this out on ShayariVerse!',
+                    url: shareUrl
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('লিংক কপি হয়েছে');
+                });
+            }
+        }
+
+        // =============================================================
+        // 7. RECENT SEARCHES MANAGER (LOCALSTORAGE)
+        // =============================================================
+        function getRecentSearches() {
+            try {
+                return JSON.parse(localStorage.getItem('recent_searches') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function addRecentSearch(term) {
+            if (!term) return;
+            let searches = getRecentSearches();
+            searches = searches.filter(s => s.toLowerCase() !== term.toLowerCase());
+            searches.unshift(term);
+            searches = searches.slice(0, 5); // Keep max 5
+            localStorage.setItem('recent_searches', JSON.stringify(searches));
+            renderRecentSearches();
+        }
+
+        function removeRecentSearch(term) {
+            let searches = getRecentSearches();
+            searches = searches.filter(s => s.toLowerCase() !== term.toLowerCase());
+            localStorage.setItem('recent_searches', JSON.stringify(searches));
+            renderRecentSearches();
+        }
+
+        function clearRecentSearches() {
+            localStorage.removeItem('recent_searches');
+            renderRecentSearches();
+        }
+
+        function renderRecentSearches() {
+            const container = document.getElementById('recent-searches-chips');
+            const searches = getRecentSearches();
+
+            if (searches.length === 0) {
+                document.getElementById('recent-searches-section').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('recent-searches-section').classList.remove('hidden');
+            container.innerHTML = '';
+
+            searches.forEach(term => {
+                const chip = document.createElement('div');
+                chip.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-800 text-xs font-semibold text-gray-300 hover:text-white transition-colors cursor-pointer";
+                chip.innerHTML = `
+                    <span onclick="applyRecentSearch('${escapeJsString(term)}')">${escapeHtml(term)}</span>
+                    <button onclick="removeRecentSearch('${escapeJsString(term)}')" class="text-gray-500 hover:text-red-400 ml-1 p-0.5"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        function applyRecentSearch(term) {
+            document.getElementById('search-input').value = term;
+            document.getElementById('clear-search-btn').classList.remove('hidden');
+            triggerSearch();
+        }
+
+        // =============================================================
+        // 8. EMPTY & ERROR STATES
+        // =============================================================
+        function renderNoResultsState() {
+            document.getElementById('load-more-container').classList.add('hidden');
+            const resultsFeed = document.getElementById('results-feed');
+            resultsFeed.innerHTML = `
+                <div class="glass-card rounded-2xl p-8 text-center border border-gray-800 my-4">
+                    <div class="w-14 h-14 rounded-2xl bg-pink-500/10 text-pink-400 flex items-center justify-center text-xl mx-auto mb-3">
+                        <i class="fa-solid fa-face-frown"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white mb-1">কোনো ফলাফল পাওয়া যায়নি।</h3>
+                    <p class="text-xs text-gray-400 max-w-xs mx-auto">অন্য কিছু দিয়ে আবার চেষ্টা করুন।</p>
+                </div>
+            `;
+        }
+
+        function renderErrorState(msg) {
+            document.getElementById('search-skeleton').classList.add('hidden');
+            const resultsFeed = document.getElementById('results-feed');
+            resultsFeed.innerHTML = `
+                <div class="glass-card rounded-2xl p-6 text-center border border-red-500/20 my-4">
+                    <i class="fa-solid fa-triangle-exclamation text-red-400 text-3xl mb-2"></i>
+                    <h3 class="text-sm font-bold text-white">${msg || 'Search করা যাচ্ছে না।'}</h3>
+                    <p class="text-xs text-gray-400 mt-1 mb-4">Please check your network connection.</p>
+                    <button onclick="triggerSearch()" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold">
+                        আবার চেষ্টা করুন
+                    </button>
+                </div>
+            `;
+        }
+
+        // Helper Functions
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escapeJsString(str) {
+            if (!str) return '';
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+        }
+    </script>
+</body>
+</html>
