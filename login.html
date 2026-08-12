@@ -8,7 +8,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tiro+Bangla&display=swap" rel="stylesheet">
 
     <!-- FontAwesome Icons CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -31,16 +31,16 @@
                         }
                     },
                     fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif']
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        bangla: ['Tiro Bangla', 'serif']
                     }
                 }
             }
         }
     </script>
 
-    <!-- Firebase Compat SDKs (Auth & Realtime Database ONLY) -->
+    <!-- Firebase Compat SDKs (App & Realtime Database ONLY) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
@@ -94,15 +94,6 @@
             z-index: 0;
         }
 
-        /* OTP Input Chrome Autofill Overrides */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus {
-            -webkit-text-fill-color: #ffffff;
-            -webkit-box-shadow: 0 0 0px 1000px #111827 inset;
-            transition: background-color 5000s ease-in-out 0s;
-        }
-
         /* Hide Number Spinner */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
@@ -154,8 +145,10 @@
                 <span id="alert-message" class="leading-relaxed"></span>
             </div>
 
-            <!-- STEP 1: PHONE NUMBER FORM -->
-            <form id="phone-form" onsubmit="handleSendOTP(event)" class="space-y-4">
+            <!-- LOGIN FORM (PHONE + PASSWORD ONLY) -->
+            <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                
+                <!-- Phone Number -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-300 mb-1.5">Phone Number</label>
                     <div class="flex items-center gap-2">
@@ -166,58 +159,28 @@
                         </div>
                         <!-- Number Input -->
                         <div class="relative flex-1">
-                            <input type="tel" id="phone-input" placeholder="1XXXXXXXXX" required pattern="[0-9]*" inputmode="numeric" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all font-medium">
+                            <input type="tel" id="phone-input" placeholder="1712345678" pattern="[0-9]*" inputmode="numeric" class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all font-medium">
                         </div>
                     </div>
-                    <p class="text-[11px] text-gray-500 mt-1.5 ml-1">Enter 10-digit mobile number (e.g. 01712345678)</p>
                 </div>
 
-                <!-- Submit Button -->
-                <button type="submit" id="send-otp-btn" class="w-full btn-gradient py-3.5 rounded-xl text-white font-bold text-xs tracking-wider uppercase shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
-                    <span id="send-btn-text">Send OTP</span>
-                    <i id="send-btn-spinner" class="fa-solid fa-circle-notch fa-spin hidden text-sm"></i>
-                </button>
-            </form>
-
-            <!-- STEP 2: OTP VERIFICATION FORM (HIDDEN INITIALLY) -->
-            <form id="otp-form" onsubmit="handleVerifyOTP(event)" class="hidden space-y-5">
-                <div class="text-center">
-                    <p class="text-xs text-gray-300">Enter the 6-digit verification code sent to:</p>
-                    <p id="target-phone-display" class="text-sm font-bold text-pink-400 mt-1"></p>
-                </div>
-
-                <!-- 6 Separate OTP Digit Input Boxes -->
-                <div class="flex items-center justify-center gap-2 my-2">
-                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-1" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
-                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-2" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
-                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-3" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
-                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-4" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
-                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-5" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
-                    <input type="number" pattern="[0-9]*" inputmode="numeric" maxlength="1" id="otp-6" class="otp-box w-10 sm:w-11 h-12 text-center text-lg font-bold rounded-xl bg-gray-900 border border-gray-800 text-white focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all">
-                </div>
-
-                <!-- Timer & Resend Option -->
-                <div class="flex items-center justify-between text-xs px-1">
-                    <button type="button" onclick="changePhoneNumber()" class="text-gray-400 hover:text-pink-400 transition-colors">
-                        <i class="fa-solid fa-pen-to-square mr-1"></i> Change Number
-                    </button>
-                    <div>
-                        <span id="resend-timer" class="text-gray-400">Resend code in <strong id="timer-seconds" class="text-pink-400">60</strong>s</span>
-                        <button type="button" id="resend-otp-btn" onclick="resendOTP()" class="hidden text-pink-400 font-semibold hover:underline">
-                            Resend OTP
+                <!-- Password -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1.5">Password</label>
+                    <div class="relative">
+                        <input type="password" id="password-input" placeholder="Enter your password" class="w-full bg-gray-900 border border-gray-800 rounded-xl pl-4 pr-10 py-3.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all font-medium">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1">
+                            <i id="pass-toggle-icon" class="fa-regular fa-eye text-sm"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Submit OTP Button -->
-                <button type="submit" id="verify-otp-btn" class="w-full btn-gradient py-3.5 rounded-xl text-white font-bold text-xs tracking-wider uppercase shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
-                    <span id="verify-btn-text">Verify &amp; Login</span>
-                    <i id="verify-btn-spinner" class="fa-solid fa-circle-notch fa-spin hidden text-sm"></i>
+                <!-- Login Button -->
+                <button type="submit" id="login-btn" class="w-full btn-gradient py-3.5 rounded-xl text-white font-bold text-xs tracking-wider uppercase shadow-lg shadow-pink-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 mt-2">
+                    <span id="login-btn-text">LOGIN</span>
+                    <i id="login-btn-spinner" class="fa-solid fa-circle-notch fa-spin hidden text-sm"></i>
                 </button>
             </form>
-
-            <!-- Invisible Recaptcha Container -->
-            <div id="recaptcha-container"></div>
 
             <!-- FOOTER REGISTER LINK -->
             <div class="mt-6 pt-5 border-t border-gray-800/80 text-center text-xs text-gray-400">
@@ -233,7 +196,7 @@
         &copy; <span id="year-span"></span> ShayariVerse. All rights reserved.
     </footer>
 
-    <!-- JAVASCRIPT & FIREBASE AUTHENTICATION LOGIC -->
+    <!-- JAVASCRIPT & FIREBASE REALTIME DB LOGIC -->
     <script>
         // =============================================================
         // 1. FIREBASE CONFIGURATION & INITIALIZATION
@@ -248,10 +211,7 @@
             appId: "1:1089467648940:web:2886be4ec3148bee08c809"
         };
 
-        let app, auth, db;
-        let confirmationResultObj = null;
-        let recaptchaVerifier = null;
-        let countdownInterval = null;
+        let app, db;
 
         try {
             if (typeof firebase !== 'undefined') {
@@ -260,7 +220,6 @@
                 } else {
                     app = firebase.app();
                 }
-                auth = firebase.auth();
                 db = firebase.database();
             }
         } catch (e) {
@@ -269,38 +228,33 @@
 
         document.getElementById('year-span').textContent = new Date().getFullYear();
 
-        // =============================================================
-        // 2. CHECK ALREADY LOGGED IN STATE
-        // =============================================================
-        if (auth) {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // Check if profile exists before redirect
-                    checkUserProfileAndRedirect(user.uid);
+        // Check if already logged in locally
+        const activeSessionUid = localStorage.getItem('shayariverse_active_uid');
+        if (activeSessionUid && db) {
+            db.ref(`users/${activeSessionUid}`).once('value').then(snap => {
+                if (snap.exists()) {
+                    window.location.href = "home.html";
                 }
             });
         }
 
         // =============================================================
-        // 3. RECAPTCHA SETUP
+        // 2. TOGGLE PASSWORD VISIBILITY
         // =============================================================
-        function setupRecaptcha() {
-            if (!auth) return;
-            if (!window.recaptchaVerifier) {
-                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                    'size': 'invisible',
-                    'callback': (response) => {
-                        // reCAPTCHA solved
-                    },
-                    'expired-callback': () => {
-                        showAlert('reCAPTCHA expired. Please try sending OTP again.', 'error');
-                    }
-                });
+        function togglePasswordVisibility() {
+            const input = document.getElementById('password-input');
+            const icon = document.getElementById('pass-toggle-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-regular fa-eye-slash text-sm text-pink-400';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-regular fa-eye text-sm text-gray-400';
             }
         }
 
         // =============================================================
-        // 4. PHONE NUMBER NORMALIZATION & VALIDATION (BANGLADESH)
+        // 3. BANGLADESH PHONE NORMALIZATION
         // =============================================================
         function normalizeBDPhone(rawPhone) {
             if (!rawPhone) return null;
@@ -324,205 +278,98 @@
             return null;
         }
 
+        // Secure Client-Side Hashing (SHA-256 via Web Crypto API)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password + "_shayariverse_salt_v1");
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         // =============================================================
-        // 5. SEND OTP HANDLER
+        // 4. LOGIN SUBMIT HANDLER
         // =============================================================
-        function handleSendOTP(event) {
+        async function handleLoginSubmit(event) {
             event.preventDefault();
             hideAlert();
 
-            const phoneInput = document.getElementById('phone-input').value;
-            const normalizedPhone = normalizeBDPhone(phoneInput);
+            const rawPhone = document.getElementById('phone-input').value;
+            const password = document.getElementById('password-input').value;
 
-            if (!normalizedPhone) {
-                showAlert('Please enter a valid Bangladesh phone number (e.g. 01712345678).', 'error');
+            // Input Validation
+            if (!rawPhone || !rawPhone.trim()) {
+                showAlert("Phone Number দিন।", "error");
                 return;
             }
 
-            setLoadingState('send', true);
+            if (!password || !password.trim()) {
+                showAlert("Password দিন।", "error");
+                return;
+            }
+
+            const normalizedPhone = normalizeBDPhone(rawPhone);
+            if (!normalizedPhone) {
+                showAlert("সঠিক Phone Number দিন।", "error");
+                return;
+            }
+
+            if (!db) {
+                showAlert("Login করা যাচ্ছে না। আবার চেষ্টা করুন।", "error");
+                return;
+            }
+
+            setLoadingState(true);
 
             try {
-                setupRecaptcha();
-                const appVerifier = window.recaptchaVerifier;
+                // Step 1: Find Account UID from phoneIndex
+                const phoneSnap = await db.ref(`phoneIndex/${normalizedPhone}`).once('value');
 
-                auth.signInWithPhoneNumber(normalizedPhone, appVerifier)
-                    .then((confirmationResult) => {
-                        confirmationResultObj = confirmationResult;
-                        setLoadingState('send', false);
-                        showAlert('OTP sent successfully to ' + normalizedPhone, 'success');
-                        
-                        // Switch UI to OTP Form
-                        document.getElementById('phone-form').classList.add('hidden');
-                        document.getElementById('otp-form').classList.remove('hidden');
-                        document.getElementById('target-phone-display').textContent = normalizedPhone;
-                        
-                        // Focus first OTP box
-                        document.getElementById('otp-1').focus();
+                if (!phoneSnap.exists()) {
+                    setLoadingState(false);
+                    showAlert("এই Phone Number দিয়ে কোনো Account পাওয়া যায়নি।", "error");
+                    return;
+                }
 
-                        // Start Resend Timer
-                        startResendTimer();
-                    })
-                    .catch((error) => {
-                        setLoadingState('send', false);
-                        if (window.recaptchaVerifier) {
-                            window.recaptchaVerifier.render().then(widgetId => {
-                                grecaptcha.reset(widgetId);
-                            });
-                        }
-                        handleFirebaseError(error);
-                    });
-            } catch (err) {
-                setLoadingState('send', false);
-                showAlert('Unable to initialize authentication. Check network connection.', 'error');
-            }
-        }
+                const uid = phoneSnap.val();
 
-        // =============================================================
-        // 6. VERIFY OTP HANDLER
-        // =============================================================
-        function handleVerifyOTP(event) {
-            event.preventDefault();
-            hideAlert();
+                // Step 2: Fetch User Record to verify password hash
+                const userSnap = await db.ref(`users/${uid}`).once('value');
 
-            const otpCode = getOTPValue();
+                if (!userSnap.exists()) {
+                    setLoadingState(false);
+                    showAlert("এই Phone Number দিয়ে কোনো Account পাওয়া যায়নি।", "error");
+                    return;
+                }
 
-            if (otpCode.length !== 6) {
-                showAlert('Please enter the complete 6-digit verification code.', 'error');
-                return;
-            }
+                const userData = userSnap.val();
+                const computedHash = await hashPassword(password);
 
-            if (!confirmationResultObj) {
-                showAlert('Session expired. Please request a new OTP.', 'error');
-                changePhoneNumber();
-                return;
-            }
+                // Step 3: Verify Hashed Password
+                if (userData.passwordHash && userData.passwordHash === computedHash) {
+                    // Password Match -> Create Authenticated Session
+                    localStorage.setItem('shayariverse_active_uid', uid);
+                    
+                    showAlert("Login successful! Redirecting...", "success");
 
-            setLoadingState('verify', true);
-
-            confirmationResultObj.confirm(otpCode)
-                .then((result) => {
-                    const user = result.user;
-                    showAlert('OTP verified! Checking account...', 'success');
-                    checkUserProfileAndRedirect(user.uid);
-                })
-                .catch((error) => {
-                    setLoadingState('verify', false);
-                    handleFirebaseError(error);
-                });
-        }
-
-        // =============================================================
-        // 7. USER PROFILE CHECK & REDIRECT FLOW
-        // =============================================================
-        function checkUserProfileAndRedirect(uid) {
-            if (!db) {
-                window.location.href = "home.html";
-                return;
-            }
-
-            db.ref(`users/${uid}`).once('value')
-                .then((snapshot) => {
-                    if (snapshot.exists() && snapshot.val().username) {
-                        // Profile exists -> Redirect to Home
+                    setTimeout(() => {
                         window.location.href = "home.html";
-                    } else {
-                        // Profile missing -> Redirect to Register to complete profile
-                        window.location.href = "register.html";
-                    }
-                })
-                .catch(() => {
-                    // Fallback to home on error
-                    window.location.href = "home.html";
-                });
-        }
+                    }, 800);
 
-        // =============================================================
-        // 8. OTP INPUT AUTO-FOCUS & PASTE LOGIC
-        // =============================================================
-        const otpBoxes = document.querySelectorAll('.otp-box');
-
-        otpBoxes.forEach((box, index) => {
-            // Auto focus next box
-            box.addEventListener('input', (e) => {
-                if (e.target.value.length >= 1) {
-                    box.value = e.target.value.slice(0, 1);
-                    if (index < otpBoxes.length - 1) {
-                        otpBoxes[index + 1].focus();
-                    }
+                } else {
+                    setLoadingState(false);
+                    showAlert("Phone Number অথবা Password সঠিক নয়।", "error");
                 }
-            });
 
-            // Backspace navigation
-            box.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace' && !box.value && index > 0) {
-                    otpBoxes[index - 1].focus();
-                }
-            });
-
-            // Paste Handler
-            box.addEventListener('paste', (e) => {
-                e.preventDefault();
-                const pastedData = (e.clipboardData || window.clipboardData).getData('text').trim();
-                if (/^\d{6}$/.test(pastedData)) {
-                    pastedData.split('').forEach((char, i) => {
-                        if (otpBoxes[i]) otpBoxes[i].value = char;
-                    });
-                    otpBoxes[5].focus();
-                }
-            });
-        });
-
-        function getOTPValue() {
-            let code = '';
-            otpBoxes.forEach(box => code += box.value);
-            return code;
-        }
-
-        function clearOTPInputs() {
-            otpBoxes.forEach(box => box.value = '');
+            } catch (err) {
+                console.error("Login Error:", err);
+                setLoadingState(false);
+                showAlert("Login করা যাচ্ছে না। আবার চেষ্টা করুন।", "error");
+            }
         }
 
         // =============================================================
-        // 9. RESEND OTP & TIMER LOGIC
-        // =============================================================
-        function startResendTimer() {
-            let seconds = 60;
-            const timerSpan = document.getElementById('timer-seconds');
-            const resendTimerDiv = document.getElementById('resend-timer');
-            const resendBtn = document.getElementById('resend-otp-btn');
-
-            resendTimerDiv.classList.remove('hidden');
-            resendBtn.classList.add('hidden');
-            timerSpan.textContent = seconds;
-
-            clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
-                seconds--;
-                timerSpan.textContent = seconds;
-                if (seconds <= 0) {
-                    clearInterval(countdownInterval);
-                    resendTimerDiv.classList.add('hidden');
-                    resendBtn.classList.remove('hidden');
-                }
-            }, 1000);
-        }
-
-        function resendOTP() {
-            clearOTPInputs();
-            handleSendOTP(new Event('submit'));
-        }
-
-        function changePhoneNumber() {
-            clearInterval(countdownInterval);
-            confirmationResultObj = null;
-            clearOTPInputs();
-            document.getElementById('otp-form').classList.add('hidden');
-            document.getElementById('phone-form').classList.remove('hidden');
-            hideAlert();
-        }
-
-        // =============================================================
-        // 10. UI HELPERS & FRIENDLY ERROR HANDLING
+        // 5. ALERT & UI HELPERS
         // =============================================================
         function showAlert(message, type = 'error') {
             const alertBox = document.getElementById('alert-box');
@@ -545,60 +392,19 @@
             document.getElementById('alert-box').classList.add('hidden');
         }
 
-        function setLoadingState(action, isLoading) {
-            if (action === 'send') {
-                const btn = document.getElementById('send-otp-btn');
-                const text = document.getElementById('send-btn-text');
-                const spinner = document.getElementById('send-btn-spinner');
-                btn.disabled = isLoading;
-                if (isLoading) {
-                    text.textContent = 'Sending OTP...';
-                    spinner.classList.remove('hidden');
-                } else {
-                    text.textContent = 'Send OTP';
-                    spinner.classList.add('hidden');
-                }
-            } else if (action === 'verify') {
-                const btn = document.getElementById('verify-otp-btn');
-                const text = document.getElementById('verify-btn-text');
-                const spinner = document.getElementById('verify-btn-spinner');
-                btn.disabled = isLoading;
-                if (isLoading) {
-                    text.textContent = 'Verifying...';
-                    spinner.classList.remove('hidden');
-                } else {
-                    text.textContent = 'Verify & Login';
-                    spinner.classList.add('hidden');
-                }
+        function setLoadingState(isLoading) {
+            const btn = document.getElementById('login-btn');
+            const text = document.getElementById('login-btn-text');
+            const spinner = document.getElementById('login-btn-spinner');
+
+            btn.disabled = isLoading;
+            if (isLoading) {
+                text.textContent = 'Logging in...';
+                spinner.classList.remove('hidden');
+            } else {
+                text.textContent = 'LOGIN';
+                spinner.classList.add('hidden');
             }
-        }
-
-        function handleFirebaseError(error) {
-            console.error("Auth Error Code:", error.code);
-            let friendlyMsg = 'An error occurred. Please try again.';
-
-            switch (error.code) {
-                case 'auth/invalid-phone-number':
-                    friendlyMsg = 'Please enter a valid Bangladesh phone number.';
-                    break;
-                case 'auth/too-many-requests':
-                    friendlyMsg = 'Too many attempts. Please wait a few minutes and try again.';
-                    break;
-                case 'auth/invalid-verification-code':
-                    friendlyMsg = 'Invalid verification code. Please check and try again.';
-                    break;
-                case 'auth/code-expired':
-                    friendlyMsg = 'Verification code has expired. Please request a new one.';
-                    break;
-                case 'auth/network-request-failed':
-                    friendlyMsg = 'Network error. Please check your internet connection.';
-                    break;
-                case 'auth/captcha-check-failed':
-                    friendlyMsg = 'reCAPTCHA verification failed. Please refresh and try again.';
-                    break;
-            }
-
-            showAlert(friendlyMsg, 'error');
         }
     </script>
 </body>
