@@ -40,9 +40,8 @@
         }
     </script>
 
-    <!-- Firebase Compat SDKs (Auth & Realtime Database ONLY) -->
+    <!-- Firebase Compat SDKs (App & Realtime Database ONLY) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
@@ -94,7 +93,6 @@
             transform: scale(0.97);
         }
 
-        /* Hide scrollbars for horizontal chip scrolling */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -112,6 +110,17 @@
     </style>
 </head>
 <body class="min-h-screen relative flex flex-col selection:bg-pink-500 selection:text-white">
+
+    <!-- FULL SCREEN INITIAL SESSION LOADER -->
+    <div id="initial-page-loader" class="fixed inset-0 z-50 bg-[#070913] flex flex-col items-center justify-center p-4">
+        <div class="w-12 h-12 rounded-2xl btn-gradient flex items-center justify-center text-white text-xl font-bold mb-4 shadow-lg shadow-pink-500/20 animate-bounce">
+            <i class="fa-solid fa-heart"></i>
+        </div>
+        <h2 class="text-lg font-extrabold text-white tracking-tight">Shayari<span class="text-gradient">Verse</span></h2>
+        <p class="text-xs text-gray-400 mt-2 flex items-center gap-2 font-medium">
+            <i class="fa-solid fa-circle-notch fa-spin text-pink-400"></i> Loading ShayariVerse...
+        </p>
+    </div>
 
     <!-- TOP HEADER -->
     <header class="glass-header fixed top-0 left-0 right-0 z-40 h-16 transition-all duration-200">
@@ -347,8 +356,8 @@
             appId: "1:1089467648940:web:2886be4ec3148bee08c809"
         };
 
-        let app, auth, db;
-        let currentUser = null;
+        let app, db;
+        let currentUserUid = null;
         let userProfileData = null;
         
         let allPublishedPosts = [];
@@ -362,61 +371,85 @@
                 } else {
                     app = firebase.app();
                 }
-                auth = firebase.auth();
                 db = firebase.database();
             }
         } catch (e) {
-            console.warn("Firebase Init Error:", e.message);
+            console.warn("Firebase Init Handling:", e.message);
         }
 
         // =============================================================
-        // 2. AUTHENTICATION CHECK
+        // 2. AUTHENTICATION SESSION INITIALIZATION (FIXED REFRESH ISSUE)
         // =============================================================
-        if (auth) {
-            auth.onAuthStateChanged((user) => {
-                if (!user) {
-                    // Redirect to login if unauthenticated
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeUserSession();
+        });
+
+        function initializeUserSession() {
+            // Retrieve session UID from localStorage (Set by login.html / register.html)
+            const activeUid = localStorage.getItem('shayariverse_active_uid');
+
+            if (!activeUid) {
+                // No session token -> Redirect to login.html
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!db) {
+                showSessionError("Session load করা যাচ্ছে না।");
+                return;
+            }
+
+            // Verify UID with Realtime Database (Wait for RTDB, do NOT redirect prematurely)
+            db.ref(`users/${activeUid}`).once('value').then((snapshot) => {
+                if (!snapshot.exists()) {
+                    // UID invalid or deleted -> Clear session and redirect to login
+                    localStorage.removeItem('shayariverse_active_uid');
                     window.location.href = "login.html";
                     return;
                 }
-                currentUser = user;
-                loadUserProfile(user.uid);
+
+                // VALID SESSION & PROFILE LOADED
+                currentUserUid = activeUid;
+                userProfileData = snapshot.val();
+
+                // Hide initial loader
+                hidePageLoader();
+
+                // Render User Profile Information
+                renderUserProfileUI(userProfileData);
+
+                // Load Published Feed
                 loadPublishedContentFeed();
-            });
-        } else {
-            // Script fallback
-            window.location.href = "login.html";
-        }
 
-        // =============================================================
-        // 3. LOAD LOGGED-IN USER PROFILE
-        // =============================================================
-        function loadUserProfile(uid) {
-            if (!db) return;
-
-            db.ref(`users/${uid}`).once('value').then((snapshot) => {
-                if (snapshot.exists()) {
-                    userProfileData = snapshot.val();
-                    const firstName = userProfileData.firstName || 'Poet';
-                    const handle = userProfileData.username ? `@${userProfileData.username}` : '@user';
-                    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=ec4899&color=fff`;
-                    const avatar = userProfileData.profilePicture || defaultAvatar;
-
-                    // Update Top Welcome UI
-                    document.getElementById('welcome-message').textContent = `Assalamu Alaikum, ${firstName} 👋`;
-                    document.getElementById('user-handle-display').textContent = handle;
-                    document.getElementById('header-user-avatar').src = avatar;
-                    document.getElementById('banner-user-avatar').src = avatar;
-                    document.getElementById('user-followers-count').textContent = userProfileData.followersCount || 0;
-                    document.getElementById('user-following-count').textContent = userProfileData.followingCount || 0;
-                }
-            }).catch(err => {
-                console.error("Error loading profile:", err);
+            }).catch((error) => {
+                console.error("Session verification error:", error);
+                showSessionError("Profile data load করা যাচ্ছে না।");
             });
         }
 
+        function hidePageLoader() {
+            const pageLoader = document.getElementById('initial-page-loader');
+            if (pageLoader) {
+                pageLoader.classList.add('hidden');
+            }
+        }
+
+        function renderUserProfileUI(data) {
+            const firstName = data.firstName || 'Poet';
+            const handle = data.username ? `@${data.username}` : '@user';
+            const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=ec4899&color=fff`;
+            const avatar = data.profilePicture || defaultAvatar;
+
+            document.getElementById('welcome-message').textContent = `Assalamu Alaikum, ${firstName} 👋`;
+            document.getElementById('user-handle-display').textContent = handle;
+            document.getElementById('header-user-avatar').src = avatar;
+            document.getElementById('banner-user-avatar').src = avatar;
+            document.getElementById('user-followers-count').textContent = data.followersCount || 0;
+            document.getElementById('user-following-count').textContent = data.followingCount || 0;
+        }
+
         // =============================================================
-        // 4. LOAD & RANK PUBLISHED FEED (TOP 10 MAXIMUM)
+        // 3. LOAD & RANK PUBLISHED FEED (TOP 10 MAXIMUM)
         // =============================================================
         function loadPublishedContentFeed() {
             if (!db) {
@@ -448,7 +481,7 @@
                         const publishedAt = item.publishedAt || item.createdAt || 0;
                         const timeScore = publishedAt / 10000000000;
 
-                        // Engagement Ranking Formula: (Love x 5) + (Views x 1) + (Comments x 3) + Recency
+                        // Formula: (Love x 5) + (Views x 1) + (Comments x 3) + Recency
                         item._score = (loves * 5) + (views * 1) + (comments * 3) + timeScore;
 
                         allPublishedPosts.push(item);
@@ -460,7 +493,7 @@
                     return;
                 }
 
-                // Global Sort Descending by Score
+                // Global Sort Descending by Engagement Score
                 allPublishedPosts.sort((a, b) => b._score - a._score);
 
                 // Render Filtered Feed
@@ -473,7 +506,7 @@
         }
 
         // =============================================================
-        // 5. FILTERING LOGIC & RENDER FEED
+        // 4. FILTERING LOGIC & RENDER FEED
         // =============================================================
         function applyFiltersAndRender() {
             let filtered = [...allPublishedPosts];
@@ -526,14 +559,14 @@
         }
 
         // =============================================================
-        // 6. RENDER CARDS DOM
+        // 5. RENDER CARDS DOM
         // =============================================================
         function renderFeedCards(posts) {
             const feedContainer = document.getElementById('main-feed-container');
             feedContainer.innerHTML = '';
 
             posts.forEach((post) => {
-                const isLyrics = post.type === 'Lyrics';
+                const isLyrics = post.type === 'Lyrics' || post.type === 'lyrics';
                 const authorName = `${post.authorFirstName || ''} ${post.authorLastName || ''}`.trim() || 'Poet';
                 const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=ec4899&color=fff`;
                 const avatar = post.authorProfilePicture || defaultAvatar;
@@ -632,12 +665,12 @@
         }
 
         // =============================================================
-        // 7. REALTIME LOVE REACTION TOGGLE
+        // 6. REALTIME LOVE REACTION TOGGLE
         // =============================================================
         function checkUserLoveState(contentId) {
-            if (!currentUser || !db) return;
+            if (!currentUserUid || !db) return;
 
-            const reactionRef = db.ref(`reactions/${contentId}/${currentUser.uid}`);
+            const reactionRef = db.ref(`reactions/${contentId}/${currentUserUid}`);
             reactionRef.on('value', (snapshot) => {
                 const icon = document.getElementById(`love-icon-${contentId}`);
                 const btn = document.getElementById(`love-btn-${contentId}`);
@@ -653,14 +686,14 @@
         }
 
         function toggleLoveReaction(contentId) {
-            if (!currentUser) {
+            if (!currentUserUid) {
                 window.location.href = "login.html";
                 return;
             }
 
             if (!db) return;
 
-            const reactionRef = db.ref(`reactions/${contentId}/${currentUser.uid}`);
+            const reactionRef = db.ref(`reactions/${contentId}/${currentUserUid}`);
             const contentLoveRef = db.ref(`content/${contentId}/loveCount`);
 
             reactionRef.once('value').then((snapshot) => {
@@ -677,7 +710,7 @@
         }
 
         // =============================================================
-        // 8. VIEW COUNTER (Session Throttled)
+        // 7. VIEW COUNTER (Session Throttled)
         // =============================================================
         function registerPostView(contentId) {
             if (!db) return;
@@ -692,7 +725,16 @@
         }
 
         // =============================================================
-        // 9. NATIVE SHARE SYSTEM
+        // 8. LOGOUT & SESSION TERMINATION
+        // =============================================================
+        function handleLogout() {
+            // Terminate session
+            localStorage.removeItem('shayariverse_active_uid');
+            window.location.href = "login.html";
+        }
+
+        // =============================================================
+        // 9. SHARE & HELPERS
         // =============================================================
         function sharePost(contentId, text) {
             const shareUrl = `${window.location.origin}/details.html?id=${contentId}`;
@@ -712,9 +754,6 @@
             }
         }
 
-        // =============================================================
-        // 10. EMPTY & ERROR STATES
-        // =============================================================
         function renderEmptyState(customMsg) {
             const feedContainer = document.getElementById('main-feed-container');
             document.getElementById('feed-count-badge').textContent = '0 Posts';
@@ -737,6 +776,21 @@
             `;
         }
 
+        function showSessionError(msg) {
+            hidePageLoader();
+            const container = document.getElementById('main-feed-container');
+            container.innerHTML = `
+                <div class="glass-card rounded-2xl p-6 text-center border border-pink-500/30 my-4">
+                    <i class="fa-solid fa-wifi text-pink-400 text-3xl mb-3"></i>
+                    <h3 class="text-sm font-bold text-white mb-1">${msg}</h3>
+                    <p class="text-xs text-gray-400 mb-4">Check internet connection and try again.</p>
+                    <button onclick="location.reload()" class="btn-gradient px-5 py-2 rounded-xl text-white text-xs font-bold shadow">
+                        Retry
+                    </button>
+                </div>
+            `;
+        }
+
         function renderErrorState() {
             const feedContainer = document.getElementById('main-feed-container');
             feedContainer.innerHTML = `
@@ -751,15 +805,6 @@
             `;
         }
 
-        function handleLogout() {
-            if (auth) {
-                auth.signOut().then(() => {
-                    window.location.href = "login.html";
-                });
-            }
-        }
-
-        // Helper Functions
         function getLanguageFontClass(lang) {
             if (lang === 'Bangla') return 'font-bangla';
             if (lang === 'Hindi') return 'font-hindi';
